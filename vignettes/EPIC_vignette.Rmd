@@ -21,8 +21,9 @@ generalized least squares to identify enrichment of risk loci, while accounting 
 correlation structures both within and between genes. In this vignette, we demonstrate a 
 guided walk through EPIC to prioritize the most relevant tissue for low-density lipoprotein (LDL). 
 
-```{r, out.width = "500px", fig.align = "center", echo=FALSE}
-knitr::include_graphics("https://raw.githubusercontent.com/rujinwang/EPIC/master/figure/Figure1.png")
+```{r, out.width = "600px", fig.align = "center", echo=FALSE}
+# knitr::include_graphics("https://raw.githubusercontent.com/rujinwang/EPIC/master/figure/Figure1.png")
+knitr::include_graphics("C:/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC/figure/Figure1.png")
 ```
 
 ## 1.2 Reference panel and dependencies
