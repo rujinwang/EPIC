@@ -31,5 +31,5 @@ structures both within and between genes.
 In preparation. 
 
 ## Vignettes
-[HTML](http://htmlpreview.github.io/?https://github.com/rujinwang/EPIC/blob/master/vignettes/EPIC_vignettes.html)
+[HTML](http://htmlpreview.github.io/?https://github.com/rujinwang/EPIC/blob/master/vignettes/EPIC_vignette.html)
 
