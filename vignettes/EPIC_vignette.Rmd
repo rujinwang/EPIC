@@ -1,0 +1,346 @@
+---
+title: "EPIC: Inferring relevant tissues and cell types for complex traits in GWAS"
+author: "Rujin Wang, Danyu Lin, Yuchao Jiang"
+date: "`r format(Sys.Date())`"
+output:
+    html_document:
+        highlight: pygments
+        toc: true
+vignette: >
+    %\VignetteIndexEntry{EPIC: Inferring relevant tissues and cell types for complex traits in GWAS}
+    %\VignetteEngine{knitr::rmarkdown}
+    \usepackage[utf8]{inputenc}
+---
+
+# 1. Overview
+## 1.1 Introduction
+EPIC is a statistical framework that relates large-scale GWAS summary statistics to tissue- 
+or cell-type-specific omics measurements from transcriptomic sequencing. We derive powerful 
+gene-level test statistics from common and rare variants, separately and jointly, and adopt 
+generalized least squares to identify enrichment of risk loci, while accounting for the 
+correlation structures both within and between genes. In this vignette, we demonstrate a 
+guided walk through EPIC to prioritize the most relevant tissue for low-density lipoprotein (LDL). 
+
+```{r, out.width = "500px", fig.align = "center", echo=FALSE}
+knitr::include_graphics("https://raw.githubusercontent.com/rujinwang/EPIC/master/figure/Figure1.png")
+```
+
+## 1.2 Reference panel and dependencies
+To estimate LD matrices, we utilize the [1000 Genomes Project European panel](https://ctg.cncr.nl/software/magma), 
+which comprises complete genotypes of 503 European individuals, as the external reference panel. 
+
+We recommend using [PLINK](https://www.cog-genomics.org/plink/1.9/) for LD pruning and SNP QC. 
+
+
+# 2. Data Input and pre-processing
+Note that users only need to run this entire section once for each trait and apply to different transcriptomic profiles. 
+
+## 2.1 Formatting GWAS summary statistics. 
+Large-scale GWAS summary statistics from different consortiums are in diverse formats, 
+due to the nature of phenotypes being studied (case-control traits v.s. quantitative traits) 
+and various analytical tools. We recommend formatting summary statistics in post-GWAS analysis. 
+In general, there are 10 required columns in the formatted summary statistics file: 
+
+* chr: chromosome number
+* pos: base pair position (Make sure that SNP locations are in reference to NCBI human genome Build 37 / UCSC hg19, including the external reference panel.)
+* rsid: SNP ID (We recommend only keeping SNPs with rs IDs.)
+* A1: effect allele (reference allele)
+* A2: other allele (non-effect allele, or alternate allele)
+* beta: the effect size. For case-control traits, $\beta$ = log(odds ratio). 
+* se: the standard error of effect size
+* P: *p*-value reported
+* MAF: minor allele frequency. We compute MAF=min(Freq(A1), 1-Freq(A1)). 
+* N: sample size
+
+Extra information such as z-score and MAC can be further appended. 
+
+* Zscore: $z=\frac{\beta}{se}$
+* MAC: minor allele count, defined as the number of subjects with at least one observed mutation. MAC=2 * N * MAF. 
+
+We download LDL GWAS summmary statistics from [Willer et al., 2013](http://csg.sph.umich.edu/willer/public/lipids2013/) and use it for demonstration in this vignette. 
+```{r}
+# install.packages("C:/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC_0.0.1.tar.gz", repos = NULL, type="source")
+library(EPIC)
+source("/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC/R/hello.R")
+trait = "LDL"
+```
+
+```{r, echo=FALSE}
+load(file = file.path("data", paste0(trait, "_processed.rda")))
+```
+
+```{r}
+head(gwas)
+```
+
+We recommend that you perform quality control and align alleles with respect to the external reference panel to avoid potential pitfalls and ensure correct LD estimation: 
+
+* Chromosomes X, Y, and MT are filtered out
+* Only retain SNPs in the 1000 Genomes Project Phase 3 (or any other external reference panel used in the analysis)
+* Remove SNPs with mismatched rsID, chromosome number, base pair position, or REF/ALT alleles with the reference panel.
+* Align the alleles (effect allele and other allele) of each SNP in reference to the 1000 Genomes Project Phase 3 (or any other external reference panel adopted). GWAS summary statistics need to be harmonized with the same effect allele and non-effect allele, otherwise we may need to flip the signs of z-score and effect size. 
+
+We demonstrate here how the QC and alignment steps work. The `bim` file for the 1000 Genomes Project European population is public [available](https://ctg.cncr.nl/software/magma). We provide a function `format_gwas()` for allele alignment and quality control. 
+
+```{r, eval=FALSE}
+bfile_path <- "/path/to/bfile"
+plink_path <- "/path/to/PLINK"
+gwas.formatted <- format_gwas(gwas, bfile_path, plink_path)
+```
+
+
+## 2.2 Mapping SNPs to human Ensembl genes
+We provide a curated and pre-stored list of genes `gene.noMHC.loc` in the package, which are on autosomes, with unique Ensembl v92 gene ID, 
+and not in the major histocompatibility complex (MHC) region (chr6: 25Mb-34Mb). By default, a gene window with 10kb upstream and 1.5kb downstream of each gene 
+is defined and SNPs are assigned to genes based on genomic positional mapping using function `map_snp_to_gene()`. 
+We generated and pre-stored gene annotations `annotation_dictionary.txt` using the default setting, with an additional appended column being the gene window length in kb for future use in gene-wise LD pruning. EPIC enables reconstruction of user-defined 
+gene annotations by specifying arguments `upstream` and `downstream` in function `annotate_gene()` and argument `anno_path` in `map_snp_to_gene()` function. 
+
+```{r, echo=FALSE}
+load(file = file.path("data", paste0(trait, "_aligned.rda")))
+gwas.formatted <- gwas.align
+```
+
+```{r, eval=FALSE}
+snp_to_gene <- map_snp_to_gene(gwas = gwas.formatted)
+```
+
+By default, EPIC use MAF=1% as the cutoff for common and rare variants. For rare variants, the upper bound of inclusion is 
+controlled by MAF while the lower bound is determined by MAC (Minor Allele Count). Rare variants with MAC less than 20 are removed from analysis. Use function `divide_common_rare()` to finish the SNP division and pre-preparation step. 
+```{r, eval=FALSE}
+snp_division_obj <- divide_common_rare(gwas = gwas.formatted, snp_to_gene = snp_to_gene)
+common_snp_to_gene <- snp_division_obj$common_snp_to_gene
+rare_snp_to_gene <- snp_division_obj$rare_snp_to_gene
+```
+
+
+## 2.3 LD pruning for common variants
+To reduce the computational cost and to alleviate the multicollinearity problem, we perform LD pruning using LD threshold $r^2 \leq 0.8$ to obtain a set of pruned-in common variants, followed by a second-round of LD pruning if the number of pruned-in common SNPs per gene exceeds 200. We demonstrate here how the first-round LD pruning pipeline works using [PLINK](https://www.cog-genomics.org/plink/1.9/). 
+
+```{bash, eval=FALSE}
+#!/bin/bash
+plink_dir=/path/to/PLINK
+out_dir=/path/to/plink_output
+ref_dir=/path/to/bfile
+cd $out_dir
+
+for gene in `cut -f1 $out_dir/annotation_dictionary.txt`; do
+	chr=`grep -w "$gene" $out_dir/annotation_dictionary.txt | cut -f2`
+	from=`grep -w "$gene" $out_dir/annotation_dictionary.txt | cut -f3`
+	to=`grep -w "$gene" $out_dir/annotation_dictionary.txt | cut -f4`
+	window=`grep -w "$gene" $out_dir/annotation_dictionary.txt | cut -f6`
+	MAF=0.01
+	prunein_dir=$out_dir/prunein/$MAF
+	[ ! -d $prunein_dir ] && mkdir -p $prunein_dir
+	if [ ! -e $prunein_dir/${gene}.prune.in ]; then
+		$plink_dir/plink --bfile $ref_dir/g1000_eur \
+			--maf $MAF \
+			--from-bp $from \
+			--to-bp $to \
+			--chr chr$chr \
+			--indep-pairwise ${window}'kb' 1 0.8 \
+			--out $prunein_dir/$gene
+	fi
+done
+```
+
+Note that PLINK LD-pruning procedure would generate thousands of intermediate files for further data importing. Use function `LD_pruning()` to complete prune-in variants importing, by specifying argument `prunein_dir` as the directory of PLINK intermediate files. 
+
+```{r, eval = FALSE}
+out_dir = "/path/to/plink_output"
+MAF <- 0.01
+prunein_dir <- file.path(out_dir, "prunein", MAF)
+prunein_snp_to_gene <- LD_pruning(common_snp_to_gene, prunein_dir)
+```
+
+EPIC provides a function `LD_pruning2()` for the second-round LD pruning procedure and SNP QC, if the number of prune-in common SNPs per gene exceeds 200. `LD_pruning2` implements PLINK LD pruning internally using a grid of $r^2$ values. Likewise, this step would generate intermediate PLINK files. We recommond processing by chromosome in parallel. 
+
+```{r, eval = FALSE}
+out_dir = "/path/to/plink_output"
+prunein_dir <- file.path(out_dir, paste0("prunein2", "_", trait), MAF)
+results_dir <- file.path("/path/to/results", trait)
+bfile_path <- "/path/to/bfile"
+plink_path <- "/path/to/PLINK"
+chr = 1
+prunein_qc_snp_to_gene.chr <- LD_pruning2(prunein_snp_to_gene, plink_path, bfile_path, chr, prunein_dir)
+save(prunein_qc_snp_to_gene.chr, file = file.path(results_dir, paste0(trait, "_prunein_", MAF, "_chr", chr, "_QC.rda")))
+
+# Merge
+prunein_qc_snp_to_gene <- NULL
+for (chr in 1:22) {
+  load(file.path(results_dir, paste0(trait, "_prunein_", MAF, "_chr", chr, "_QC.rda")))
+  prunein_qc_snp_to_gene <- c(prunein_qc_snp_to_gene, prunein_qc_snp_to_gene.chr)
+}
+```
+
+## 2.4 Importing GWAS summary statistics
+Use `read_in()` to import GWAS summary statistics for genes. 
+```{r, eval = FALSE}
+prunein_gene_pval <- read_in(gwas = gwas.formatted, snp_to_gene = prunein_qc_snp_to_gene)
+rare_gene_pval <- read_in(gwas = gwas.formatted, snp_to_gene = rare_snp_to_gene)
+```
+
+
+
+
+
+# 3. Gene Expression Data Curation
+We adopt a unified framework to process all transcriptomic data. Likewise, we focus on the curated and pre-stored list of genes `gene.noMHC.loc` in the package, which are on autosomes, with unique Ensembl v92 gene ID, and not in the major histocompatibility complex (MHC) region (chr6: 25Mb-34Mb).
+
+## 3.1 Bulk RNA-seq from GTEx
+For tissue-specific bulk RNA-seq data from the Genotype-Tissue Expression project ([GTEx v8](http://www.gtexportal.org/)), tissues with fewer than 100 samples were removed from the analysis. After sample-specific quality controls, we obtained gene expression profiles of 45 tissues. For subsequent analyses, we focused on a set of 8,708 genes with tissue specificity scores greater than 5. We then perform log2 transformation on the tissue-specific TPM measurements with an added pseudo-count. We demonstrate the pre-stored GTEx v8 dataset `gtex` in this vignette.
+
+```{r, echo=FALSE}
+load(file = file.path("data", "gtex.rda"))
+```
+
+```{r}
+loc <- read.table(file = system.file("extdata", "gene.noMHC.loc", package = "EPIC"), 
+                  sep = "\t", header = FALSE, stringsAsFactors = FALSE)
+gtex.loc <- loc[loc$V1 %in% rownames(gtex), ]
+```
+
+## 3.2 Single-cell RNA-seq
+For scRNA-seq data, we follow the Seurat pipeline to perform gene- and cell-wise quality controls and focus on the top 8000 highly variable genes. Cell-type-specific RPKMs are calculated by combining reads or UMI counts from all cells pertaining to a specific cell type, followed by log2 transformation with an added pseudo-count. We illustrate here how the transcriptomic data processing works for scRNA-seq using pancreatic islet scRNA-seq data from [Baron et al.](https://www.sciencedirect.com/science/article/pii/S2405471216302666?via%3Dihub).  
+
+```{r, eval=FALSE}
+library(Seurat)
+BaronMatrix <- readRDS(url("https://storage.googleapis.com/cellid-cbl/BaronMatrix.rds"))
+BaronMetaData <- readRDS(url("https://storage.googleapis.com/cellid-cbl/BaronMetaData.rds"))
+Baron <- CreateSeuratObject(counts = BaronMatrix, project = "Baron", min.cells = 5, min.features = 200, meta.data = BaronMetaData)
+
+scRNA.object <- process_scRNA(SeuratObject, meta_ct_col = "cell.type")
+scRNA.rpkm <- scRNA.object$scRNA.rpkm
+scRNA.loc <- scRNA.object$scRNA.loc
+```
+
+
+# 4. Gene-level association testing
+## 4.1 $\chi^2$ test for prune-in common variants
+To perform gene-level association testing for common variants, we construct a simple and powerful chi-square statistic for testing the null hypothesis of $\beta=0$:
+$$\hat{z}R^{-1}\hat{z}\sim\chi_{K'}^2$$
+where $\hat{z}=(\hat{z}_1, \cdots, \hat{z}_K)^T$ are $z$-scores, $R=cor(\hat{\beta})$ is the covariance and correlation matrix of $\hat{z}$ and we approximate $R=\{R_{jl};j,l=1,\cdots,K\}$ by using the LD matrix calculated from the Pearson correlation among genotypes of $K$ variants. $K'$ is the rank of correlation matrix $R$. The correlation matrix $R$ can be estimated from either the participating study or a publicly available reference panel. In this study, we utilize the 1000 Genomes Project European panel. 
+
+
+An effective chi-square test described above requires the covariance matrix to be well-conditioned. To solve this issue, we choose to adopt the [POET](https://rss.onlinelibrary.wiley.com/doi/full/10.1111/rssb.12016) estimator, a principal orthogonal complement thresholding approach, to obtain a well-conditioned covariance matrix via sparse shrinkage under a high-dimensional setting. 
+
+
+Proximal genes that share $cis$-SNPs inherit LD from SNPs and result in correlations among genes. Since the correlations between genes are caused by LD between SNPs, which quickly drops off as a function of distance, we adopt a sliding-window approach to only compute correlations for pairs of genes within a certain distance from each. By default, we set the sliding window size $d=10$. We take advantage of the Cholesky decomposition to obtain the gene-gene correlation between $Q_s=(\hat{z}^{(s)})^T (R^{(s)})^{-1} \hat{z}^{(s)}$ and $Q_t=(\hat{z}^{(t)})^T (R^{(t)})^{-1} \hat{z}^{(t)}$. 
+
+We illustrate here how to read PLINK `bed`, `bim`, and `fam` files, making it easy to go with genotype data. 
+```{r, eval=FALSE}
+library(genio)
+file_bed <- file.path("/path/to/bfile", "g1000_eur.bed")
+file_bim <- file.path("/path/to/bfile", "g1000_eur.bim")
+file_fam <- file.path("/path/to/bfile", "g1000_eur.fam")
+
+bim <- read_bim(file_bim)
+fam <- read_fam(file_fam)
+genotype <- read_bed(file_bed, bim$id, fam$id)
+
+chr = 1 # 1:22
+bim <- bim[which(bim$chr == chr), ]
+X_ref <- genotype[match(bim$id, rownames(genotype)),]
+
+save(X_ref, file = file.path("/path/to/bfile", paste0("genotype_chr", chr, ".rda")))
+save(bim, file = file.path("/path/to/bfile", paste0("bim_chr", chr, ".rda")))
+```
+
+We offer the function `calculate_POET_sw()` to obtain well-conditioned correlation matrix $R$ using the LD matrix calculated from the Pearson correlation among genotypes. Credits to the [POET](https://CRAN.R-project.org/package=POET) package, we modify part of the code and implement adaptive thresholding. Note that this sliding window step would generate lots of intermediate files for further use in gene-level testing and gene-gene correlation calculation. We recommend parallel computing by chromosome to improve computational efficiency. 
+
+```{r, eval=FALSE}
+chr = 1 # 1:22
+load(file = file.path("/path/to/bfile", paste0("genotype_chr", chr, ".rda")))
+inter_dir <- file.path("/path/to/intermediates", trait)
+calculate_POET_sw(genotype = X_ref, gene_pval = prunein_gene_pval, 
+                  gene.loc = gtex.loc, # For scRNA-seq data, specify gene.loc = scRNA.loc, which is returned by function process_scRNA()
+                  chr = chr, type = "POET", inter_dir = inter_dir)
+```
+
+With all intermediate files available, we perform gene-level $\chi^2$ association testing and compute gene-gene correlations for pairs of genes within 5Mb by default. 
+```{r, eval=FALSE}
+pruneinObject <- get_gene_chisq(gene_pval = prunein_gene_pval, 
+                                gene.loc = gtex.loc, # For scRNA-seq data, specify gene.loc = scRNA.loc, which is returned by function process_scRNA() 
+                                type = "POET", inter_dir = inter_dir)
+prunein_POET_gene_pval <- pruneinObject$gene_POET_pval
+prunein_gene_corr.mat <- pruneinObject$gene_corr.mat
+```
+
+
+
+## 4.2 Burden test for rare variants
+Previous work has demonstrated that the gene-level testing of rare variants is powerful and able to achieve well-controlled type I error as long as the correlation matrix of single-variant test statistics can be accurately estimated. Here, we recover the burden test statistics from GWAS summary statistics for the gene-level association testing of rare variants.
+```{r, eval=FALSE}
+rare_gene_pval <- get_burden(genotype = genotype, gene_pval = rare_gene_pval)
+```
+
+
+
+## 4.3 Joint analysis for common and rare variants
+To incorporate rare variants into the common-variant gene association testing framework, we collapse genotypes of all rare variants within a gene to construct a pseudo-SNP. We then treat the aggregated pseudo-SNP as a common variant, where the corresponding z-score is recovered from the burden test statistic. 
+
+```{r, eval=FALSE}
+combine_gene_pval <- get_combined(prunein_gene_pval = prunein_gene_pval, rare_gene_pval = rare_gene_pval)
+X_super <- construct_X_super(genotype, rare_gene_pval = rare_gene_pval)
+```
+
+Similar to prune-in common variants, we adopt sliding window approach to obtain POET estimator and recommend parallel computing. 
+```{r, eval=FALSE}
+chr = 1 # 1:22
+calculate_POET_sw(genotype = X_ref, gene_pval = combine_gene_pval, 
+                  gene.loc = gtex.loc, # For scRNA-seq data, specify gene.loc = scRNA.loc, which is returned by function process_scRNA()
+                  chr = chr, type = "iPOET", X_super = X_super, inter_dir = inter_dir)
+```
+
+With all intermediate files available, we perform a joint chi-square test for common and rare variants and compute gene-gene correlations. 
+```{r, eval=FALSE}
+combineObject <- get_gene_chisq(gene_pval = combine_gene_pval, 
+                                gene.loc = gtex.loc, # For scRNA-seq data, specify gene.loc = scRNA.loc, which is returned by function process_scRNA() 
+                                type = "iPOET", inter_dir = inter_dir)
+combine_POET_gene_pval <- combineObject$gene_POET_pval
+combine_gene_corr.mat <- combineObject$gene_corr.mat
+```
+
+
+# 5. Prioritizing trait-relevant tissue(s) and cell type(s)
+To detect tissue- or cell-type-specific enrichment for a specific trait of interest, EPIC provides a regression framework based on generalized least squares to identify risk loci enrichment. The key underlying hypothesis is that if a particular cell type influences a trait, more GWAS polygenic signals would be concentrated in genes with greater cell-type-specific gene expression. For example, under this hypothesis, genes that are significantly associated with lipid trait are expected to be highly expressed in the liver since the liver is known to participate in cholesterol regulation. 
+
+We perform the one-sided test $\gamma_c > 0$ to evaluate whether gene-level association signals of the phenotype of interest linearly increased with cell type expression specificity. To avoid being unduly affected in the model fitting, we iteratively examined diagnostic plots to remove the influential point with the highest Cook's distance greater than 0.2. 
+```{r, eval=FALSE}
+# To prioritize trait-relevant tissues by GTEx v8:
+gtex.enrichment <- prioritize_relevance(gene_pval = prunein_POET_gene_pval, gene_corr.mat = prunein_gene_corr.mat, 
+                                        gene_expr = gtex, gene.loc = gtex.loc) 
+
+# To prioritize trait-relevant cell types by scRNA:
+scRNA.enrichment <- prioritize_relevance(gene_pval = prunein_POET_gene_pval, gene_corr.mat = prunein_gene_corr.mat, 
+                                         gene_expr = scRNA.rpkm, gene.loc = scRNA.loc) 
+```
+
+EPIC allows for joint enrichment analysis of both common and rare variants. 
+```{r, eval=FALSE}
+# To prioritize trait-relevant tissues by GTEx v8:
+gtex.enrichment.joint <- prioritize_relevance(gene_pval = combine_POET_gene_pval, gene_corr.mat = combine_gene_corr.mat, 
+                                              gene_expr = gtex, gene.loc = gtex.loc) 
+
+# To prioritize trait-relevant cell types by scRNA:
+scRNA.enrichment.joint <- prioritize_relevance(gene_pval = combine_POET_gene_pval, gene_corr.mat = combine_gene_corr.mat, 
+                                               gene_expr = scRNA.rpkm, gene.loc = scRNA.loc) 
+```
+
+We further carry out a gene-specific influence analysis to identify genes that are highly influential in leading to the significance of the prioritized tissue or cell type, using the DFBETAS statistics - large values of DFBETAS indicate observations (i.e., genes) that are influential in estimating $\gamma_c$.  With a size-adjusted cutoff, significantly influential genes allow for further pathway or gene set enrichment analyses.
+```{r, eval=FALSE}
+influential_test.liver <- influential_testing(gene_pval = prunein_POET_gene_pval,
+                                              gene_corr.mat = prunein_gene_corr.mat, 
+                                              gene_expr = gtex, gene.loc = gtex.loc, 
+                                              ct = "Liver")
+influential.genes.liver = influential_test.liver$influential.genes
+p.dfbeta.liver = influential_test.liver$p.dfbeta
+p.dfbeta.liver
+```
+
+
+## Session information
+
+```{r}
+sessionInfo()
+```
