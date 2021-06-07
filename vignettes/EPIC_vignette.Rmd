@@ -26,16 +26,18 @@ guided walk through EPIC to prioritize the most relevant tissue for low-density 
 # knitr::include_graphics("https://raw.githubusercontent.com/rujinwang/EPIC/master/figure/Figure1.png")
 knitr::include_graphics("C:/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC/figure/Figure1.png")
 ```
+**Figure 1**. Overview of EPIC framework. 
+
 
 ## 1.2 Reference panel and dependencies
 To estimate LD matrices, we utilize the [1000 Genomes Project European panel](https://ctg.cncr.nl/software/magma), 
-which comprises complete genotypes of 503 European individuals, as the external reference panel [@1000GP, @MAGMA]. 
+which comprises complete genotypes of 503 European individuals, as the external reference panel [@1000GP; @MAGMA]. 
 
 We recommend using [PLINK](https://www.cog-genomics.org/plink/1.9/) [@PLINK] for LD pruning and SNP QC. 
 
 
 # 2. Data Input and pre-processing
-Note that users only need to run this entire section once for each trait and apply to different transcriptomic profiles. 
+Note that users only need to run this entire section 2 once for each trait and apply to different transcriptomic profiles. 
 
 ## 2.1 Formatting GWAS summary statistics. 
 Large-scale GWAS summary statistics from different consortiums are in diverse formats, 
