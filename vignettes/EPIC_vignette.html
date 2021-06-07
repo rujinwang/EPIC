@@ -11,7 +11,7 @@
 
 <meta name="author" content="Rujin Wang, Danyu Lin, Yuchao Jiang" />
 
-<meta name="date" content="2021-06-02" />
+<meta name="date" content="2021-06-07" />
 
 <title>EPIC: Inferring relevant tissues and cell types for complex traits in GWAS</title>
 
@@ -239,7 +239,7 @@ summary {
 
 <h1 class="title toc-ignore">EPIC: Inferring relevant tissues and cell types for complex traits in GWAS</h1>
 <h4 class="author">Rujin Wang, Danyu Lin, Yuchao Jiang</h4>
-<h4 class="date">2021-06-02</h4>
+<h4 class="date">2021-06-07</h4>
 
 </div>
 
@@ -264,9 +264,9 @@ summary {
 <li><a href="#burden-test-for-rare-variants">4.2 Burden test for rare variants</a></li>
 <li><a href="#joint-analysis-for-common-and-rare-variants">4.3 Joint analysis for common and rare variants</a></li>
 </ul></li>
-<li><a href="#prioritizing-trait-relevant-tissues-and-cell-types">5. Prioritizing trait-relevant tissue(s) and cell type(s)</a><ul>
+<li><a href="#prioritizing-trait-relevant-tissues-and-cell-types">5. Prioritizing trait-relevant tissue(s) and cell type(s)</a></li>
 <li><a href="#session-information">Session information</a></li>
-</ul></li>
+<li><a href="#references">References</a></li>
 </ul>
 </div>
 
@@ -279,8 +279,8 @@ summary {
 </div>
 <div id="reference-panel-and-dependencies" class="section level2">
 <h2>1.2 Reference panel and dependencies</h2>
-<p>To estimate LD matrices, we utilize the <a href="https://ctg.cncr.nl/software/magma">1000 Genomes Project European panel</a>, which comprises complete genotypes of 503 European individuals, as the external reference panel.</p>
-<p>We recommend using <a href="https://www.cog-genomics.org/plink/1.9/">PLINK</a> for LD pruning and SNP QC.</p>
+<p>To estimate LD matrices, we utilize the <a href="https://ctg.cncr.nl/software/magma">1000 Genomes Project European panel</a>, which comprises complete genotypes of 503 European individuals, as the external reference panel <span class="citation">(Genomes Project et al. 2012, <span class="citation">Leeuw et al. (2015)</span>)</span>.</p>
+<p>We recommend using <a href="https://www.cog-genomics.org/plink/1.9/">PLINK</a> <span class="citation">(C. C. Chang et al. 2015)</span> for LD pruning and SNP QC.</p>
 </div>
 </div>
 <div id="data-input-and-pre-processing" class="section level1">
@@ -306,10 +306,10 @@ summary {
 <li>Zscore: <span class="math inline">\(z=\frac{\beta}{se}\)</span></li>
 <li>MAC: minor allele count, defined as the number of subjects with at least one observed mutation. MAC=2 * N * MAF.</li>
 </ul>
-<p>We download LDL GWAS summmary statistics from <a href="http://csg.sph.umich.edu/willer/public/lipids2013/">Willer et al., 2013</a> and use it for demonstration in this vignette.</p>
+<p>We download LDL GWAS summmary statistics from <a href="http://csg.sph.umich.edu/willer/public/lipids2013/">GLGC</a> <span class="citation">(Willer et al. 2013)</span> and use it for demonstration in this vignette.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># install.packages(&quot;C:/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC_0.0.1.tar.gz&quot;, repos = NULL, type=&quot;source&quot;)</span>
 <span class="kw">library</span>(EPIC)
-<span class="kw">source</span>(<span class="st">&quot;/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC/R/hello.R&quot;</span>)
+<span class="co"># source(&quot;/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC/R/hello.R&quot;)</span>
 trait =<span class="st"> &quot;LDL&quot;</span></code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(gwas)</code></pre></div>
 <pre><code>##   chr       pos      rsid A1 A2   beta     se       P    MAF     N
@@ -349,7 +349,7 @@ rare_snp_to_gene &lt;-<span class="st"> </span>snp_division_obj<span class="op">
 </div>
 <div id="ld-pruning-for-common-variants" class="section level2">
 <h2>2.3 LD pruning for common variants</h2>
-<p>To reduce the computational cost and to alleviate the multicollinearity problem, we perform LD pruning using LD threshold <span class="math inline">\(r^2 \leq 0.8\)</span> to obtain a set of pruned-in common variants, followed by a second-round of LD pruning if the number of pruned-in common SNPs per gene exceeds 200. We demonstrate here how the first-round LD pruning pipeline works using <a href="https://www.cog-genomics.org/plink/1.9/">PLINK</a>.</p>
+<p>To reduce the computational cost and to alleviate the multicollinearity problem, we perform LD pruning using LD threshold <span class="math inline">\(r^2 \leq 0.8\)</span> to obtain a set of pruned-in common variants, followed by a second-round of LD pruning if the number of pruned-in common SNPs per gene exceeds 200. We demonstrate here how the first-round LD pruning pipeline works using <a href="https://www.cog-genomics.org/plink/1.9/">PLINK</a> <span class="citation">(C. C. Chang et al. 2015)</span>.</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co">#!/bin/bash</span>
 <span class="va">plink_dir=</span>/path/to/PLINK
 <span class="va">out_dir=</span>/path/to/plink_output
@@ -408,14 +408,14 @@ rare_gene_pval &lt;-<span class="st"> </span><span class="kw">read_in</span>(<sp
 <p>We adopt a unified framework to process all transcriptomic data. Likewise, we focus on the curated and pre-stored list of genes <code>gene.noMHC.loc</code> in the package, which are on autosomes, with unique Ensembl v92 gene ID, and not in the major histocompatibility complex (MHC) region (chr6: 25Mb-34Mb).</p>
 <div id="bulk-rna-seq-from-gtex" class="section level2">
 <h2>3.1 Bulk RNA-seq from GTEx</h2>
-<p>For tissue-specific bulk RNA-seq data from the Genotype-Tissue Expression project (<a href="http://www.gtexportal.org/">GTEx v8</a>), tissues with fewer than 100 samples were removed from the analysis. After sample-specific quality controls, we obtained gene expression profiles of 45 tissues. For subsequent analyses, we focused on a set of 8,708 genes with tissue specificity scores greater than 5. We then perform log2 transformation on the tissue-specific TPM measurements with an added pseudo-count. We demonstrate the pre-stored GTEx v8 dataset <code>gtex</code> in this vignette.</p>
+<p>For tissue-specific bulk RNA-seq data from the Genotype-Tissue Expression project <span class="citation">(Consortium 2020)</span> (<a href="http://www.gtexportal.org/">GTEx v8</a>), tissues with fewer than 100 samples were removed from the analysis. After sample-specific quality controls, we obtained gene expression profiles of 45 tissues. For subsequent analyses, we focused on a set of 8,708 genes with tissue specificity scores greater than 5. We then perform log2 transformation on the tissue-specific TPM measurements with an added pseudo-count. We demonstrate the pre-stored GTEx v8 dataset <code>gtex</code> in this vignette.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">loc &lt;-<span class="st"> </span><span class="kw">read.table</span>(<span class="dt">file =</span> <span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;gene.noMHC.loc&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;EPIC&quot;</span>), 
                   <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\t</span><span class="st">&quot;</span>, <span class="dt">header =</span> <span class="ot">FALSE</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
 gtex.loc &lt;-<span class="st"> </span>loc[loc<span class="op">$</span>V1 <span class="op">%in%</span><span class="st"> </span><span class="kw">rownames</span>(gtex), ]</code></pre></div>
 </div>
 <div id="single-cell-rna-seq" class="section level2">
 <h2>3.2 Single-cell RNA-seq</h2>
-<p>For scRNA-seq data, we follow the Seurat pipeline to perform gene- and cell-wise quality controls and focus on the top 8000 highly variable genes. Cell-type-specific RPKMs are calculated by combining reads or UMI counts from all cells pertaining to a specific cell type, followed by log2 transformation with an added pseudo-count. We illustrate here how the transcriptomic data processing works for scRNA-seq using pancreatic islet scRNA-seq data from <a href="https://www.sciencedirect.com/science/article/pii/S2405471216302666?via%3Dihub">Baron et al.</a>.</p>
+<p>For scRNA-seq data, we follow the Seurat pipeline <span class="citation">(Stuart et al. 2019)</span> to perform gene- and cell-wise quality controls and focus on the top 8000 highly variable genes. Cell-type-specific RPKMs are calculated by combining reads or UMI counts from all cells pertaining to a specific cell type, followed by log2 transformation with an added pseudo-count. We illustrate here how the transcriptomic data processing works for scRNA-seq using pancreatic islet scRNA-seq data from <span class="citation">(Baron et al. 2016)</span>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(Seurat)
 BaronMatrix &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="kw">url</span>(<span class="st">&quot;https://storage.googleapis.com/cellid-cbl/BaronMatrix.rds&quot;</span>))
 BaronMetaData &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="kw">url</span>(<span class="st">&quot;https://storage.googleapis.com/cellid-cbl/BaronMetaData.rds&quot;</span>))
@@ -431,7 +431,7 @@ scRNA.loc &lt;-<span class="st"> </span>scRNA.object<span class="op">$</span>scR
 <div id="chi2-test-for-prune-in-common-variants" class="section level2">
 <h2>4.1 <span class="math inline">\(\chi^2\)</span> test for prune-in common variants</h2>
 <p>To perform gene-level association testing for common variants, we construct a simple and powerful chi-square statistic for testing the null hypothesis of <span class="math inline">\(\beta=0\)</span>: <span class="math display">\[\hat{z}R^{-1}\hat{z}\sim\chi_{K'}^2\]</span> where <span class="math inline">\(\hat{z}=(\hat{z}_1, \cdots, \hat{z}_K)^T\)</span> are <span class="math inline">\(z\)</span>-scores, <span class="math inline">\(R=cor(\hat{\beta})\)</span> is the covariance and correlation matrix of <span class="math inline">\(\hat{z}\)</span> and we approximate <span class="math inline">\(R=\{R_{jl};j,l=1,\cdots,K\}\)</span> by using the LD matrix calculated from the Pearson correlation among genotypes of <span class="math inline">\(K\)</span> variants. <span class="math inline">\(K'\)</span> is the rank of correlation matrix <span class="math inline">\(R\)</span>. The correlation matrix <span class="math inline">\(R\)</span> can be estimated from either the participating study or a publicly available reference panel. In this study, we utilize the 1000 Genomes Project European panel.</p>
-<p>An effective chi-square test described above requires the covariance matrix to be well-conditioned. To solve this issue, we choose to adopt the <a href="https://rss.onlinelibrary.wiley.com/doi/full/10.1111/rssb.12016">POET</a> estimator, a principal orthogonal complement thresholding approach, to obtain a well-conditioned covariance matrix via sparse shrinkage under a high-dimensional setting.</p>
+<p>An effective chi-square test described above requires the covariance matrix to be well-conditioned. To solve this issue, we choose to adopt the <a href="https://rss.onlinelibrary.wiley.com/doi/full/10.1111/rssb.12016">POET</a> estimator <span class="citation">(Fan, Liao, and Mincheva 2013)</span>, a principal orthogonal complement thresholding approach, to obtain a well-conditioned covariance matrix via sparse shrinkage under a high-dimensional setting.</p>
 <p>Proximal genes that share <span class="math inline">\(cis\)</span>-SNPs inherit LD from SNPs and result in correlations among genes. Since the correlations between genes are caused by LD between SNPs, which quickly drops off as a function of distance, we adopt a sliding-window approach to only compute correlations for pairs of genes within a certain distance from each. By default, we set the sliding window size <span class="math inline">\(d=10\)</span>. We take advantage of the Cholesky decomposition to obtain the gene-gene correlation between <span class="math inline">\(Q_s=(\hat{z}^{(s)})^T (R^{(s)})^{-1} \hat{z}^{(s)}\)</span> and <span class="math inline">\(Q_t=(\hat{z}^{(t)})^T (R^{(t)})^{-1} \hat{z}^{(t)}\)</span>.</p>
 <p>We illustrate here how to read PLINK <code>bed</code>, <code>bim</code>, and <code>fam</code> files, making it easy to go with genotype data.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(genio)
@@ -465,7 +465,7 @@ prunein_gene_corr.mat &lt;-<span class="st"> </span>pruneinObject<span class="op
 </div>
 <div id="burden-test-for-rare-variants" class="section level2">
 <h2>4.2 Burden test for rare variants</h2>
-<p>Previous work has demonstrated that the gene-level testing of rare variants is powerful and able to achieve well-controlled type I error as long as the correlation matrix of single-variant test statistics can be accurately estimated. Here, we recover the burden test statistics from GWAS summary statistics for the gene-level association testing of rare variants.</p>
+<p>Previous work <span class="citation">(Hu et al. 2013)</span> has demonstrated that the gene-level testing of rare variants is powerful and able to achieve well-controlled type I error as long as the correlation matrix of single-variant test statistics can be accurately estimated. Here, we recover the burden test statistics from GWAS summary statistics for the gene-level association testing of rare variants.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">rare_gene_pval &lt;-<span class="st"> </span><span class="kw">get_burden</span>(<span class="dt">genotype =</span> genotype, <span class="dt">gene_pval =</span> rare_gene_pval)</code></pre></div>
 </div>
 <div id="joint-analysis-for-common-and-rare-variants" class="section level2">
@@ -488,7 +488,7 @@ combine_gene_corr.mat &lt;-<span class="st"> </span>combineObject<span class="op
 </div>
 <div id="prioritizing-trait-relevant-tissues-and-cell-types" class="section level1">
 <h1>5. Prioritizing trait-relevant tissue(s) and cell type(s)</h1>
-<p>To detect tissue- or cell-type-specific enrichment for a specific trait of interest, EPIC provides a regression framework based on generalized least squares to identify risk loci enrichment. The key underlying hypothesis is that if a particular cell type influences a trait, more GWAS polygenic signals would be concentrated in genes with greater cell-type-specific gene expression. For example, under this hypothesis, genes that are significantly associated with lipid trait are expected to be highly expressed in the liver since the liver is known to participate in cholesterol regulation.</p>
+<p>To detect tissue- or cell-type-specific enrichment for a specific trait of interest, EPIC provides a regression framework based on generalized least squares to identify risk loci enrichment. The key underlying hypothesis is that if a particular cell type influences a trait, more GWAS polygenic signals would be concentrated in genes with greater cell-type-specific gene expression. For example, under this hypothesis, genes that are significantly associated with lipid trait are expected to be highly expressed in the liver since the liver is known to participate in cholesterol regulation. This relationship between the GWAS association signals and the gene expression specificity is modeled as below: <span class="math display">\[Y = \gamma_0 + E_c\gamma_c+A\gamma_A+\epsilon, \]</span> where <span class="math inline">\(Y_g=\frac{Q_g}{K_g+1}\)</span>, <span class="math inline">\(Q_g\)</span> is the gene-level chi-square association test statistic for gene <span class="math inline">\(g\)</span> with <span class="math inline">\(K_g\)</span> common SNPs within the gene; for each cell type <span class="math inline">\(c\)</span>, <span class="math inline">\(E_{cg}\)</span> is the cell-type-specific gene expression (RPKM or TPM); we include <span class="math inline">\(A_g=\frac{1}{T}\sum_{c=1}^TE_{cg}\)</span> being the average gene expression across all <span class="math inline">\(T\)</span> tissues or cell types, to account for the baseline gene expression <span class="citation">(Watanabe et al. 2019)</span>.</p>
 <p>We perform the one-sided test <span class="math inline">\(\gamma_c &gt; 0\)</span> to evaluate whether gene-level association signals of the phenotype of interest linearly increased with cell type expression specificity. To avoid being unduly affected in the model fitting, we iteratively examined diagnostic plots to remove the influential point with the highest Cook's distance greater than 0.2.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># To prioritize trait-relevant tissues by GTEx v8:</span>
 gtex.enrichment &lt;-<span class="st"> </span><span class="kw">prioritize_relevance</span>(<span class="dt">gene_pval =</span> prunein_POET_gene_pval, <span class="dt">gene_corr.mat =</span> prunein_gene_corr.mat, 
@@ -513,8 +513,9 @@ scRNA.enrichment.joint &lt;-<span class="st"> </span><span class="kw">prioritize
 influential.genes.liver =<span class="st"> </span>influential_test.liver<span class="op">$</span>influential.genes
 p.dfbeta.liver =<span class="st"> </span>influential_test.liver<span class="op">$</span>p.dfbeta
 p.dfbeta.liver</code></pre></div>
-<div id="session-information" class="section level2">
-<h2>Session information</h2>
+</div>
+<div id="session-information" class="section level1">
+<h1>Session information</h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sessionInfo</span>()</code></pre></div>
 <pre><code>## R version 3.6.1 (2019-07-05)
 ## Platform: x86_64-w64-mingw32/x64 (64-bit)
@@ -541,6 +542,40 @@ p.dfbeta.liver</code></pre></div>
 ##  [7] Rcpp_1.0.2        stringi_1.4.3     rmarkdown_2.5    
 ## [10] data.table_1.12.4 knitr_1.25        stringr_1.4.0    
 ## [13] xfun_0.18         digest_0.6.21     evaluate_0.14</code></pre>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1>References</h1>
+<div id="refs" class="references">
+<div id="ref-Baron2016">
+<p>Baron, M., A. Veres, S. L. Wolock, A. L. Faust, R. Gaujoux, A. Vetere, J. H. Ryu, et al. 2016. “A Single-Cell Transcriptomic Map of the Human and Mouse Pancreas Reveals Inter- and Intra-Cell Population Structure.” Journal Article. <em>Cell Syst</em> 3 (4): 346–60 e4. doi:<a href="https://doi.org/10.1016/j.cels.2016.08.011">10.1016/j.cels.2016.08.011</a>.</p>
+</div>
+<div id="ref-PLINK">
+<p>Chang, C. C., C. C. Chow, L. C. Tellier, S. Vattikuti, S. M. Purcell, and J. J. Lee. 2015. “Second-Generation Plink: Rising to the Challenge of Larger and Richer Datasets.” Journal Article. <em>Gigascience</em> 4: 7. doi:<a href="https://doi.org/10.1186/s13742-015-0047-8">10.1186/s13742-015-0047-8</a>.</p>
+</div>
+<div id="ref-GTEx2020">
+<p>Consortium, G. TEx. 2020. “The Gtex Consortium Atlas of Genetic Regulatory Effects Across Human Tissues.” Journal Article. <em>Science</em> 369 (6509): 1318–30. doi:<a href="https://doi.org/10.1126/science.aaz1776">10.1126/science.aaz1776</a>.</p>
+</div>
+<div id="ref-Fan2013">
+<p>Fan, J., Y. Liao, and M. Mincheva. 2013. “Large Covariance Estimation by Thresholding Principal Orthogonal Complements.” Journal Article. <em>J R Stat Soc Series B Stat Methodol</em> 75 (4). doi:<a href="https://doi.org/10.1111/rssb.12016">10.1111/rssb.12016</a>.</p>
+</div>
+<div id="ref-1000GP">
+<p>Genomes Project, Consortium, G. R. Abecasis, A. Auton, L. D. Brooks, M. A. DePristo, R. M. Durbin, R. E. Handsaker, H. M. Kang, G. T. Marth, and G. A. McVean. 2012. “An Integrated Map of Genetic Variation from 1,092 Human Genomes.” Journal Article. <em>Nature</em> 491 (7422): 56–65. doi:<a href="https://doi.org/10.1038/nature11632">10.1038/nature11632</a>.</p>
+</div>
+<div id="ref-Hu2013">
+<p>Hu, Y. J., S. I. Berndt, S. Gustafsson, A. Ganna, ANthropometric Traits Consortium Genetic Investigation of, J. Hirschhorn, K. E. North, E. Ingelsson, and D. Y. Lin. 2013. “Meta-Analysis of Gene-Level Associations for Rare Variants Based on Single-Variant Statistics.” Journal Article. <em>Am J Hum Genet</em> 93 (2): 236–48. doi:<a href="https://doi.org/10.1016/j.ajhg.2013.06.011">10.1016/j.ajhg.2013.06.011</a>.</p>
+</div>
+<div id="ref-MAGMA">
+<p>Leeuw, C. A. de, J. M. Mooij, T. Heskes, and D. Posthuma. 2015. “MAGMA: Generalized Gene-Set Analysis of Gwas Data.” Journal Article. <em>PLoS Comput Biol</em> 11 (4): e1004219. doi:<a href="https://doi.org/10.1371/journal.pcbi.1004219">10.1371/journal.pcbi.1004219</a>.</p>
+</div>
+<div id="ref-Seurat">
+<p>Stuart, T., A. Butler, P. Hoffman, C. Hafemeister, E. Papalexi, 3rd Mauck W. M., Y. Hao, M. Stoeckius, P. Smibert, and R. Satija. 2019. “Comprehensive Integration of Single-Cell Data.” Journal Article. <em>Cell</em> 177 (7): 1888–1902 e21. doi:<a href="https://doi.org/10.1016/j.cell.2019.05.031">10.1016/j.cell.2019.05.031</a>.</p>
+</div>
+<div id="ref-Watanabe2019">
+<p>Watanabe, K., M. Umicevic Mirkov, C. A. de Leeuw, M. P. van den Heuvel, and D. Posthuma. 2019. “Genetic Mapping of Cell Type Specificity for Complex Traits.” Journal Article. <em>Nat Commun</em> 10 (1): 3222. doi:<a href="https://doi.org/10.1038/s41467-019-11181-1">10.1038/s41467-019-11181-1</a>.</p>
+</div>
+<div id="ref-Willer2013">
+<p>Willer, C. J., E. M. Schmidt, S. Sengupta, G. M. Peloso, S. Gustafsson, S. Kanoni, A. Ganna, et al. 2013. “Discovery and Refinement of Loci Associated with Lipid Levels.” Journal Article. <em>Nat Genet</em> 45 (11): 1274–83. doi:<a href="https://doi.org/10.1038/ng.2797">10.1038/ng.2797</a>.</p>
+</div>
 </div>
 </div>
 

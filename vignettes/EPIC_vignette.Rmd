@@ -6,6 +6,7 @@ output:
     html_document:
         highlight: pygments
         toc: true
+bibliography: EPIC.bib
 vignette: >
     %\VignetteIndexEntry{EPIC: Inferring relevant tissues and cell types for complex traits in GWAS}
     %\VignetteEngine{knitr::rmarkdown}
@@ -28,9 +29,9 @@ knitr::include_graphics("C:/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC/figure/Fig
 
 ## 1.2 Reference panel and dependencies
 To estimate LD matrices, we utilize the [1000 Genomes Project European panel](https://ctg.cncr.nl/software/magma), 
-which comprises complete genotypes of 503 European individuals, as the external reference panel. 
+which comprises complete genotypes of 503 European individuals, as the external reference panel [@1000GP, @MAGMA]. 
 
-We recommend using [PLINK](https://www.cog-genomics.org/plink/1.9/) for LD pruning and SNP QC. 
+We recommend using [PLINK](https://www.cog-genomics.org/plink/1.9/) [@PLINK] for LD pruning and SNP QC. 
 
 
 # 2. Data Input and pre-processing
@@ -58,11 +59,11 @@ Extra information such as z-score and MAC can be further appended.
 * Zscore: $z=\frac{\beta}{se}$
 * MAC: minor allele count, defined as the number of subjects with at least one observed mutation. MAC=2 * N * MAF. 
 
-We download LDL GWAS summmary statistics from [Willer et al., 2013](http://csg.sph.umich.edu/willer/public/lipids2013/) and use it for demonstration in this vignette. 
+We download LDL GWAS summmary statistics from [GLGC](http://csg.sph.umich.edu/willer/public/lipids2013/) [@Willer2013] and use it for demonstration in this vignette. 
 ```{r}
 # install.packages("C:/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC_0.0.1.tar.gz", repos = NULL, type="source")
 library(EPIC)
-source("/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC/R/hello.R")
+# source("/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC/R/hello.R")
 trait = "LDL"
 ```
 
@@ -116,7 +117,7 @@ rare_snp_to_gene <- snp_division_obj$rare_snp_to_gene
 
 
 ## 2.3 LD pruning for common variants
-To reduce the computational cost and to alleviate the multicollinearity problem, we perform LD pruning using LD threshold $r^2 \leq 0.8$ to obtain a set of pruned-in common variants, followed by a second-round of LD pruning if the number of pruned-in common SNPs per gene exceeds 200. We demonstrate here how the first-round LD pruning pipeline works using [PLINK](https://www.cog-genomics.org/plink/1.9/). 
+To reduce the computational cost and to alleviate the multicollinearity problem, we perform LD pruning using LD threshold $r^2 \leq 0.8$ to obtain a set of pruned-in common variants, followed by a second-round of LD pruning if the number of pruned-in common SNPs per gene exceeds 200. We demonstrate here how the first-round LD pruning pipeline works using [PLINK](https://www.cog-genomics.org/plink/1.9/) [@PLINK]. 
 
 ```{bash, eval=FALSE}
 #!/bin/bash
@@ -189,7 +190,7 @@ rare_gene_pval <- read_in(gwas = gwas.formatted, snp_to_gene = rare_snp_to_gene)
 We adopt a unified framework to process all transcriptomic data. Likewise, we focus on the curated and pre-stored list of genes `gene.noMHC.loc` in the package, which are on autosomes, with unique Ensembl v92 gene ID, and not in the major histocompatibility complex (MHC) region (chr6: 25Mb-34Mb).
 
 ## 3.1 Bulk RNA-seq from GTEx
-For tissue-specific bulk RNA-seq data from the Genotype-Tissue Expression project ([GTEx v8](http://www.gtexportal.org/)), tissues with fewer than 100 samples were removed from the analysis. After sample-specific quality controls, we obtained gene expression profiles of 45 tissues. For subsequent analyses, we focused on a set of 8,708 genes with tissue specificity scores greater than 5. We then perform log2 transformation on the tissue-specific TPM measurements with an added pseudo-count. We demonstrate the pre-stored GTEx v8 dataset `gtex` in this vignette.
+For tissue-specific bulk RNA-seq data from the Genotype-Tissue Expression project [@GTEx2020] ([GTEx v8](http://www.gtexportal.org/)), tissues with fewer than 100 samples were removed from the analysis. After sample-specific quality controls, we obtained gene expression profiles of 45 tissues. For subsequent analyses, we focused on a set of 8,708 genes with tissue specificity scores greater than 5. We then perform log2 transformation on the tissue-specific TPM measurements with an added pseudo-count. We demonstrate the pre-stored GTEx v8 dataset `gtex` in this vignette.
 
 ```{r, echo=FALSE}
 load(file = file.path("data", "gtex.rda"))
@@ -202,7 +203,7 @@ gtex.loc <- loc[loc$V1 %in% rownames(gtex), ]
 ```
 
 ## 3.2 Single-cell RNA-seq
-For scRNA-seq data, we follow the Seurat pipeline to perform gene- and cell-wise quality controls and focus on the top 8000 highly variable genes. Cell-type-specific RPKMs are calculated by combining reads or UMI counts from all cells pertaining to a specific cell type, followed by log2 transformation with an added pseudo-count. We illustrate here how the transcriptomic data processing works for scRNA-seq using pancreatic islet scRNA-seq data from [Baron et al.](https://www.sciencedirect.com/science/article/pii/S2405471216302666?via%3Dihub).  
+For scRNA-seq data, we follow the Seurat pipeline [@Seurat] to perform gene- and cell-wise quality controls and focus on the top 8000 highly variable genes. Cell-type-specific RPKMs are calculated by combining reads or UMI counts from all cells pertaining to a specific cell type, followed by log2 transformation with an added pseudo-count. We illustrate here how the transcriptomic data processing works for scRNA-seq using pancreatic islet scRNA-seq data from [@Baron2016].  
 
 ```{r, eval=FALSE}
 library(Seurat)
@@ -223,7 +224,7 @@ $$\hat{z}R^{-1}\hat{z}\sim\chi_{K'}^2$$
 where $\hat{z}=(\hat{z}_1, \cdots, \hat{z}_K)^T$ are $z$-scores, $R=cor(\hat{\beta})$ is the covariance and correlation matrix of $\hat{z}$ and we approximate $R=\{R_{jl};j,l=1,\cdots,K\}$ by using the LD matrix calculated from the Pearson correlation among genotypes of $K$ variants. $K'$ is the rank of correlation matrix $R$. The correlation matrix $R$ can be estimated from either the participating study or a publicly available reference panel. In this study, we utilize the 1000 Genomes Project European panel. 
 
 
-An effective chi-square test described above requires the covariance matrix to be well-conditioned. To solve this issue, we choose to adopt the [POET](https://rss.onlinelibrary.wiley.com/doi/full/10.1111/rssb.12016) estimator, a principal orthogonal complement thresholding approach, to obtain a well-conditioned covariance matrix via sparse shrinkage under a high-dimensional setting. 
+An effective chi-square test described above requires the covariance matrix to be well-conditioned. To solve this issue, we choose to adopt the [POET](https://rss.onlinelibrary.wiley.com/doi/full/10.1111/rssb.12016) estimator [@Fan2013], a principal orthogonal complement thresholding approach, to obtain a well-conditioned covariance matrix via sparse shrinkage under a high-dimensional setting. 
 
 
 Proximal genes that share $cis$-SNPs inherit LD from SNPs and result in correlations among genes. Since the correlations between genes are caused by LD between SNPs, which quickly drops off as a function of distance, we adopt a sliding-window approach to only compute correlations for pairs of genes within a certain distance from each. By default, we set the sliding window size $d=10$. We take advantage of the Cholesky decomposition to obtain the gene-gene correlation between $Q_s=(\hat{z}^{(s)})^T (R^{(s)})^{-1} \hat{z}^{(s)}$ and $Q_t=(\hat{z}^{(t)})^T (R^{(t)})^{-1} \hat{z}^{(t)}$. 
@@ -270,7 +271,7 @@ prunein_gene_corr.mat <- pruneinObject$gene_corr.mat
 
 
 ## 4.2 Burden test for rare variants
-Previous work has demonstrated that the gene-level testing of rare variants is powerful and able to achieve well-controlled type I error as long as the correlation matrix of single-variant test statistics can be accurately estimated. Here, we recover the burden test statistics from GWAS summary statistics for the gene-level association testing of rare variants.
+Previous work [@Hu2013] has demonstrated that the gene-level testing of rare variants is powerful and able to achieve well-controlled type I error as long as the correlation matrix of single-variant test statistics can be accurately estimated. Here, we recover the burden test statistics from GWAS summary statistics for the gene-level association testing of rare variants.
 ```{r, eval=FALSE}
 rare_gene_pval <- get_burden(genotype = genotype, gene_pval = rare_gene_pval)
 ```
@@ -304,7 +305,9 @@ combine_gene_corr.mat <- combineObject$gene_corr.mat
 
 
 # 5. Prioritizing trait-relevant tissue(s) and cell type(s)
-To detect tissue- or cell-type-specific enrichment for a specific trait of interest, EPIC provides a regression framework based on generalized least squares to identify risk loci enrichment. The key underlying hypothesis is that if a particular cell type influences a trait, more GWAS polygenic signals would be concentrated in genes with greater cell-type-specific gene expression. For example, under this hypothesis, genes that are significantly associated with lipid trait are expected to be highly expressed in the liver since the liver is known to participate in cholesterol regulation. 
+To detect tissue- or cell-type-specific enrichment for a specific trait of interest, EPIC provides a regression framework based on generalized least squares to identify risk loci enrichment. The key underlying hypothesis is that if a particular cell type influences a trait, more GWAS polygenic signals would be concentrated in genes with greater cell-type-specific gene expression. For example, under this hypothesis, genes that are significantly associated with lipid trait are expected to be highly expressed in the liver since the liver is known to participate in cholesterol regulation. This relationship between the GWAS association signals and the gene expression specificity is modeled as below: 
+$$Y = \gamma_0 + E_c\gamma_c+A\gamma_A+\epsilon, $$
+where $Y_g=\frac{Q_g}{K_g+1}$, $Q_g$ is the gene-level chi-square association test statistic for gene $g$ with $K_g$ common SNPs within the gene; for each cell type $c$, $E_{cg}$ is the cell-type-specific gene expression (RPKM or TPM); we include  $A_g=\frac{1}{T}\sum_{c=1}^TE_{cg}$ being the average gene expression across all $T$ tissues or cell types, to account for the baseline gene expression [@Watanabe2019].  
 
 We perform the one-sided test $\gamma_c > 0$ to evaluate whether gene-level association signals of the phenotype of interest linearly increased with cell type expression specificity. To avoid being unduly affected in the model fitting, we iteratively examined diagnostic plots to remove the influential point with the highest Cook's distance greater than 0.2. 
 ```{r, eval=FALSE}
@@ -340,8 +343,11 @@ p.dfbeta.liver
 ```
 
 
-## Session information
+# Session information
 
 ```{r}
 sessionInfo()
 ```
+
+
+# References
