@@ -4,7 +4,7 @@
 \alias{process_scRNA}
 \title{Transcriptomic data processing for scRNA-seq}
 \usage{
-process_scRNA(SeuratObject, meta_ct_col = "cell.type")
+process_scRNA(SeuratObject, meta_ct_col)
 }
 \arguments{
 \item{SeuratObject}{a Seurat object from a gene expression matrix, returned from \code{CreateSeuratObject}.}

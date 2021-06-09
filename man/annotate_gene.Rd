@@ -25,7 +25,8 @@ We annotate each gene by defining a gene window with 10kb upstream of start site
 \examples{
 \dontrun{
  anno_dictionary <- annotate_gene(upstream = 10, downstream = 1.5)
- write.table(anno_dictionary, file = "annotation_dictionary.txt", quote = FALSE, sep = "\\t", row.names = FALSE, col.names = FALSE)
+ write.table(anno_dictionary, file = "annotation_dictionary.txt", quote = FALSE,
+             sep = "\\t", row.names = FALSE, col.names = FALSE)
 }
 
 }

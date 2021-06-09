@@ -18,9 +18,8 @@ A list of GWAS summary statistics for genes.
 Import GWAS summary statisics for gene
 }
 \examples{
-\dontrun{
-prunein_gene_pval <- read_in(gwas = gwas.formatted, snp_to_gene = prunein_qc_snp_to_gene)
-}
+prunein_gene_pval.Demo <- read_in(gwas = gwas.formatted.Demo,
+                                  snp_to_gene = prunein_qc_snp_to_gene.Demo)
 
 }
 \author{

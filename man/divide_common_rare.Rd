@@ -4,7 +4,7 @@
 \alias{divide_common_rare}
 \title{Divide SNPs into common and rare variants}
 \usage{
-divide_common_rare(gwas, snp_to_gene)
+divide_common_rare(gwas, snp_to_gene, maf_thres = 0.01, mac_lb = 20)
 }
 \arguments{
 \item{gwas}{a data frame of formatted GWAS summary statistics}
@@ -29,9 +29,10 @@ By default, EPIC use MAF=1% as the cutoff for common and rare variants.
 }
 \examples{
 \dontrun{
-snp_division_obj <- divide_common_rare(gwas = gwas.formatted, snp_to_gene = snp_to_gene)
-common_snp_to_gene <- snp_division_obj$common_snp_to_gene
-rare_snp_to_gene <- snp_division_obj$rare_snp_to_gene
+snp_division_obj.Demo <- divide_common_rare(gwas = gwas.formatted.Demo,
+                                            snp_to_gene = snp_to_gene.Demo)
+common_snp_to_gene.Demo <- snp_division_obj.Demo$common_snp_to_gene
+rare_snp_to_gene.Demo <- snp_division_obj.Demo$rare_snp_to_gene
 }
 
 }

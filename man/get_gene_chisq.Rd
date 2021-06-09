@@ -4,7 +4,8 @@
 \alias{get_gene_chisq}
 \title{Chi-square gene-level association testing and gene-gene correlation}
 \usage{
-get_gene_chisq(gene_pval, gene.loc, type = "POET", inter_dir)
+get_gene_chisq(gene_pval, gene.loc, type = "POET", inter_dir,
+                max.dist = 5, sliding_size = 10, sliding_step = 1)
 }
 \arguments{
 \item{gene_pval}{a list of GWAS summary statistics for genes}
@@ -34,8 +35,11 @@ We perform gene-level chi-square association testing and calculate
 }
 \examples{
 \dontrun{
-get_gene_chisq(gene_pval = prunein_gene_pval, gene.loc = gtex.loc,
-               type = "POET", inter_dir = inter_dir)
+pruneinObject.Demo <- get_gene_chisq(gene_pval = prunein_gene_pval.Demo,
+                                     gene.loc = gtex.loc,
+                                     type = "POET", inter_dir = inter_dir)
+prunein_POET_gene_pval.Demo <- pruneinObject.Demo$gene_POET_pval
+prunein_gene_corr.mat.Demo <- pruneinObject.Demo$gene_corr.mat
 }
 
 }

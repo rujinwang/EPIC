@@ -27,7 +27,7 @@ Large-scale GWAS summary statistics from different consortiums
 \dontrun{
 bfile_path <- "/path/to/bfile"
 plink_path <- "/path/to/PLINK"
-gwas.formatted <- format_gwas(gwas, bfile_path, plink_path)
+gwas.formatted.Demo <- format_gwas(gwas.Demo, bfile_path, plink_path)
 }
 
 }

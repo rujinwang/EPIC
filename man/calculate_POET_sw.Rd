@@ -4,7 +4,8 @@
 \alias{calculate_POET_sw}
 \title{POET estimator and sliding window approach}
 \usage{
-calculate_POET_sw(genotype, gene_pval, gene.loc, chr, type = "POET", inter_dir)
+calculate_POET_sw(genotype, gene_pval, gene.loc, chr, type, inter_dir,
+                   X_super = NULL, sliding_size = 10, Cmin = 1.5, sliding_step = 1)
 }
 \arguments{
 \item{genotype}{a genotype matrix}
@@ -43,7 +44,7 @@ We adopt the POET estimator to obtain a well-conditioned covariance matrix
 \examples{
 \dontrun{
 inter_dir <- file.path("/path/to/intermediates", trait)
-calculate_POET_sw(genotype = X_ref, gene_pval = prunein_gene_pval,
+calculate_POET_sw(genotype = X_ref.Demo, gene_pval = prunein_gene_pval.Demo,
                   gene.loc = gtex.loc,
                   chr = chr, type = "POET", inter_dir = inter_dir)
 }

@@ -20,7 +20,7 @@ We recover burden test statistics from GWAS summary statistics
 }
 \examples{
 \dontrun{
-rare_gene_pval <- get_burden(genotype = genotype, gene_pval = rare_gene_pval)
+rare_gene_pval.Demo <- get_burden(genotype = X_ref.Demo, gene_pval = rare_gene_pval.Demo)
 }
 
 }

@@ -23,7 +23,7 @@ common variants using PLINK.
 out_dir = "/path/to/plink_output"
 MAF <- 0.01
 prunein_dir <- file.path(out_dir, "prunein", MAF)
-prunein_snp_to_gene <- LD_pruning(common_snp_to_gene, prunein_dir)
+prunein_snp_to_gene.Demo <- LD_pruning(common_snp_to_gene.Demo, prunein_dir)
 }
 
 }

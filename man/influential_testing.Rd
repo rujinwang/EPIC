@@ -4,7 +4,8 @@
 \alias{influential_testing}
 \title{Identify a set of tissue- or cell-type-specific influential genes}
 \usage{
-influential_testing(gene_pval, gene_corr.mat, gene_expr, gene.loc, ct)
+influential_testing(gene_pval, gene_corr.mat, gene_expr, gene.loc,
+                     chrs = 1:22, ct, verbose = FALSE)
 }
 \arguments{
 \item{gene_pval}{a list of genes with gene-level association testing}
@@ -18,7 +19,11 @@ this can be returned from \code{process_scRNA}.}
 (e.g., top 8000 highly variable genes from scRNA-seq or genes with great specificity score from GTEx v8).
 This can be returned from \code{process_scRNA}.}
 
+\item{chrs}{chromosomes. Default is \code{1:22}.}
+
 \item{ct}{a character of prioritized tissue or cell type}
+
+\item{verbose}{a logical value of diagnostic messages. Default is \code{FALSE}.}
 }
 \value{
 A list with components
@@ -32,10 +37,12 @@ For a significantly enriched tissue or cell type,
 }
 \examples{
 \dontrun{
-influential_test.gtex <- influential_testing(gene_pval = prunein_POET_gene_pval,
-                                             gene_corr.mat = prunein_gene_corr.mat,
-                                             gene_expr = gtex, gene.loc = gtex.loc,
-                                             ct = "Liver")
+influential_test.Demo.liver <- influential_testing(gene_pval = combine_POET_gene_pval.Demo,
+                                                   gene_corr.mat = combine_gene_corr.mat.Demo,
+                                                   gene_expr = gtex.Demo, gene.loc = gtex.loc,
+                                                   ct = "Liver")
+influential.genes.liver = influential_test.Demo.liver$influential.genes
+p.dfbeta.liver = influential_test.Demo.liver$p.dfbeta
 }
 
 }

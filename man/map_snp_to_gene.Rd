@@ -4,7 +4,7 @@
 \alias{map_snp_to_gene}
 \title{Mapping SNPs to genes}
 \usage{
-map_snp_to_gene(gwas, anno_path)
+map_snp_to_gene(gwas, anno_path = NULL)
 }
 \arguments{
 \item{gwas}{a data frame of formatted GWAS summary statistics}
@@ -20,9 +20,7 @@ By default, a gene window with 10kb upstream and 1.5kb downstream of each gene i
  and SNPs are assigned to genes based on genomic positional mapping.
 }
 \examples{
-\dontrun{
-snp_to_gene <- map_snp_to_gene(gwas = gwas.formatted)
-}
+ snp_to_gene.Demo <- map_snp_to_gene(gwas = gwas.formatted.Demo)
 
 }
 \author{

@@ -20,7 +20,8 @@ We combine gene-level chi-square association testing for common variants
 }
 \examples{
 \dontrun{
-combine_gene_pval <- get_combined(prunein_gene_pval, rare_gene_pval)
+combine_gene_pval.Demo <- get_combined(prunein_gene_pval = prunein_gene_pval.Demo,
+                                       rare_gene_pval = rare_gene_pval.Demo)
 }
 
 }

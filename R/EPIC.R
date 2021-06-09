@@ -18,7 +18,7 @@
 #' \dontrun{
 #' bfile_path <- "/path/to/bfile"
 #' plink_path <- "/path/to/PLINK"
-#' gwas.formatted <- format_gwas(gwas, bfile_path, plink_path)
+#' gwas.formatted.Demo <- format_gwas(gwas.Demo, bfile_path, plink_path)
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
@@ -40,7 +40,7 @@ format_gwas <- function(gwas, bfile_path, plink_path = NULL) {
   gwas$MAC <- round(2 * gwas$N * gwas$MAF)
 
   message("Chromosomes X, Y, and MT are filtered out...")
-  keep.chr <- gwas$chr %in% 1:22
+  keep.chr <- gwas$chr %in% seq_len(22)
   gwas <- gwas[keep.chr, ]
 
   message("Remove SNPs with MAF, MAC being NAs...")
@@ -57,6 +57,7 @@ format_gwas <- function(gwas, bfile_path, plink_path = NULL) {
     message("Generate the list of SNP rs IDs in the external reference panel...")
     system(cmd)
   }
+  message("Import the list of SNPs returned from PLINK...")
   snp.1000g <- fread(file.path(bfile_path, "plink.snplist"), header = FALSE)
   snp.1000g <- c(snp.1000g)
   snp.1000g <- snp.1000g[[1]]
@@ -107,10 +108,12 @@ format_gwas <- function(gwas, bfile_path, plink_path = NULL) {
 #' @examples
 #' \dontrun{
 #'  anno_dictionary <- annotate_gene(upstream = 10, downstream = 1.5)
-#'  write.table(anno_dictionary, file = "annotation_dictionary.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+#'  write.table(anno_dictionary, file = "annotation_dictionary.txt", quote = FALSE,
+#'              sep = "\t", row.names = FALSE, col.names = FALSE)
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
+#' @import utils
 #' @export
 annotate_gene <- function(upstream = 10, downstream = 1.5) {
   upstream = upstream * 1000
@@ -120,7 +123,7 @@ annotate_gene <- function(upstream = 10, downstream = 1.5) {
                           header = FALSE, stringsAsFactors = FALSE)
 
   anno_dictionary = dictionary
-  for (i in 1:nrow(anno_dictionary)) {
+  for (i in seq_len(nrow(anno_dictionary))) {
     if(anno_dictionary$V5[i] == "+"){
       anno_dictionary$V3[i] = anno_dictionary$V3[i] - upstream
       anno_dictionary$V4[i] = anno_dictionary$V4[i] + downstream
@@ -144,7 +147,7 @@ annotate_gene <- function(upstream = 10, downstream = 1.5) {
 #'  and SNPs are assigned to genes based on genomic positional mapping.
 #'
 #' @usage
-#'  map_snp_to_gene(gwas, anno_path)
+#'  map_snp_to_gene(gwas, anno_path = NULL)
 #' @param gwas a data frame of formatted GWAS summary statistics
 #' @param anno_path path to the user-specified annotation dictionary returned from \code{annotate_gene}.
 #'  Default is 10kb upstream and 1.5kb downstream of each gene.
@@ -152,11 +155,10 @@ annotate_gene <- function(upstream = 10, downstream = 1.5) {
 #' @return A list of assigned SNPs for genes.
 #'
 #' @examples
-#' \dontrun{
-#' snp_to_gene <- map_snp_to_gene(gwas = gwas.formatted)
-#' }
+#'  snp_to_gene.Demo <- map_snp_to_gene(gwas = gwas.formatted.Demo)
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
+#' @import utils
 #' @export
 map_snp_to_gene <- function(gwas, anno_path = NULL) {
   if(is.null(anno_path)){
@@ -167,10 +169,12 @@ map_snp_to_gene <- function(gwas, anno_path = NULL) {
                                  sep = "\t", header = FALSE, stringsAsFactors = FALSE)
   }
 
+  gwas.chrs <- unique(sort(gwas$chr))
+  anno_dictionary <- anno_dictionary[anno_dictionary$V2 %in% gwas.chrs, ]
   snp_to_gene = vector('list', dim(anno_dictionary)[1])
   names(snp_to_gene) = anno_dictionary$V1
-  for (i in 1:dim(anno_dictionary)[1]){
-    if(i%%100==1) {message("Assigning SNPs for gene ", i)}
+  for (i in seq_len(dim(anno_dictionary)[1])){
+    if(i%%1000==1) {message("Assigning SNPs for gene ", i, "...")}
     gene.name = names(snp_to_gene)[i]
     chr = anno_dictionary$V2[i]
     start = anno_dictionary$V3[i]
@@ -196,7 +200,7 @@ map_snp_to_gene <- function(gwas, anno_path = NULL) {
 #'  Rare variants with MAC less than 20 are removed from analysis.
 #'
 #' @usage
-#'  divide_common_rare(gwas, snp_to_gene)
+#'  divide_common_rare(gwas, snp_to_gene, maf_thres = 0.01, mac_lb = 20)
 #' @param gwas a data frame of formatted GWAS summary statistics
 #' @param snp_to_gene A list of assigned SNPs for genes, returned from \code{map_snp_to_gene}.
 #' @param maf_thres the MAF cutoff for common and rare variants. Default is \code{0.01}.
@@ -209,9 +213,10 @@ map_snp_to_gene <- function(gwas, anno_path = NULL) {
 #'
 #' @examples
 #' \dontrun{
-#' snp_division_obj <- divide_common_rare(gwas = gwas.formatted, snp_to_gene = snp_to_gene)
-#' common_snp_to_gene <- snp_division_obj$common_snp_to_gene
-#' rare_snp_to_gene <- snp_division_obj$rare_snp_to_gene
+#' snp_division_obj.Demo <- divide_common_rare(gwas = gwas.formatted.Demo,
+#'                                             snp_to_gene = snp_to_gene.Demo)
+#' common_snp_to_gene.Demo <- snp_division_obj.Demo$common_snp_to_gene
+#' rare_snp_to_gene.Demo <- snp_division_obj.Demo$rare_snp_to_gene
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
@@ -227,8 +232,8 @@ divide_common_rare <- function(gwas, snp_to_gene, maf_thres = 0.01, mac_lb = 20)
   # Map rare and common SNPs to genes
   rare_snp_to_gene = vector('list', length(snp_to_gene))
   names(rare_snp_to_gene) = names(snp_to_gene)
-  for (i in 1:length(names(rare_snp_to_gene))){
-    if(i%%100==1) {message("Assigning rare variants for gene ", i)}
+  for (i in seq_len(length(names(rare_snp_to_gene)))){
+    if(i%%200==1) {message("Assigning rare variants for gene ", i)}
     rare_snp_to_gene[[i]] = snp_to_gene[[i]][which(snp_to_gene[[i]] %in% rare.snps)]
   }
   message("\n", "Assigning common variants for genes...")
@@ -281,7 +286,7 @@ divide_common_rare <- function(gwas, snp_to_gene, maf_thres = 0.01, mac_lb = 20)
 #' out_dir = "/path/to/plink_output"
 #' MAF <- 0.01
 #' prunein_dir <- file.path(out_dir, "prunein", MAF)
-#' prunein_snp_to_gene <- LD_pruning(common_snp_to_gene, prunein_dir)
+#' prunein_snp_to_gene.Demo <- LD_pruning(common_snp_to_gene.Demo, prunein_dir)
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
@@ -291,7 +296,7 @@ LD_pruning <- function(common_snp_to_gene, prunein_dir) {
   prunein_snp_to_gene = vector('list', length(common_snp_to_gene))
   names(prunein_snp_to_gene) = names(common_snp_to_gene)
 
-  for (i in 1:length(names(common_snp_to_gene))){
+  for (i in seq_len(length(names(common_snp_to_gene)))){
     if(i%%100==1) {message("\n", "Assigning prune-in common variants for gene", i)}
     gene = names(common_snp_to_gene)[i]
     if(file.exists(file.path(prunein_dir, paste0(gene, ".prune.in")))){
@@ -317,8 +322,11 @@ LD_pruning <- function(common_snp_to_gene, prunein_dir) {
 #' common variants using PLINK.
 #'
 #' @usage
-#'  LD_pruning(common_snp_to_gene, prunein_dir)
-#' @param common_snp_to_gene A list of assigned common SNPs for genes, returned from \code{divide_common_rare}.
+#'  second_pruning(prunein_snp_to_gene, plink_path, bfile_path, chr, prunein_dir)
+#' @param prunein_snp_to_gene A list of assigned common SNPs for genes, returned from \code{LD_pruning}.
+#' @param bfile_path path to the \code{bim} file of reference panel
+#' @param plink_path path to the PLINK toolkit
+#' @param chr numeric value of chromosome number
 #' @param prunein_dir the directory of LD pruning intermediate files
 #'
 #' @return A list of assigned prune-in common SNPs for genes.
@@ -331,21 +339,22 @@ LD_pruning <- function(common_snp_to_gene, prunein_dir) {
 #' prunein_dir <- file.path(out_dir, paste0("prunein2", "_", trait), MAF)
 #' bfile_path <- "/path/to/bfile"
 #' plink_path <- "/path/to/PLINK"
-#' chr = 1
-#' prunein_qc_snp_to_gene.chr <- LD_pruning2(prunein_snp_to_gene, plink_path, bfile_path, chr, prunein_dir)
+#' chr = 2
+#' prunein_qc_snp_to_gene.chr <- second_pruning(prunein_snp_to_gene.Demo,
+#'                                              plink_path, bfile_path, chr, prunein_dir)
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
-#' @import data.table glue
+#' @import data.table glue utils
 #' @export
-LD_pruning2 <- function(prunein_snp_to_gene, plink_path, bfile_path, chr, prunein_dir) {
+second_pruning <- function(prunein_snp_to_gene, plink_path, bfile_path, chr, prunein_dir) {
   anno_dictionary <- read.table(file = system.file("extdata", "annotation_dictionary.txt", package = "EPIC"),
                                 sep = "\t", header = FALSE, stringsAsFactors = FALSE)
   gene.chr <- as.character(anno_dictionary$V1)[anno_dictionary$V2==chr]
   prunein_qc_snp_to_gene <- prunein_qc_snp_to_gene[which(names(prunein_qc_snp_to_gene) %in% gene.chr)]
   prunein.size <- sapply(prunein_qc_snp_to_gene, function(z){length(z)}, USE.NAMES = FALSE)
 
-  for (i in 1:length(prunein_qc_snp_to_gene)) {
+  for (i in seq_len(length(prunein_qc_snp_to_gene))) {
     gene.name = names(prunein_qc_snp_to_gene)[i]
 
     # gene-window size
@@ -417,24 +426,23 @@ LD_pruning2 <- function(prunein_snp_to_gene, plink_path, bfile_path, chr, prunei
 #' @return A list of GWAS summary statistics for genes.
 #'
 #' @examples
-#' \dontrun{
-#' prunein_gene_pval <- read_in(gwas = gwas.formatted, snp_to_gene = prunein_qc_snp_to_gene)
-#' }
+#' prunein_gene_pval.Demo <- read_in(gwas = gwas.formatted.Demo,
+#'                                   snp_to_gene = prunein_qc_snp_to_gene.Demo)
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
 #' @import data.table
 #' @export
 read_in <- function(gwas, snp_to_gene) {
-  mapped.snps <- unique(unlist(snp_to_gene, use.name = FALSE))
+  mapped.snps <- unique(unlist(snp_to_gene, use.names = FALSE))
   gwas <- gwas[match(mapped.snps, gwas$rsid),]
   gwas <- as.data.table(gwas)
 
   gene_pval = vector("list", length = length(snp_to_gene))
   names(gene_pval) = names(snp_to_gene)
 
-  for (i in 1:length(gene_pval)) {
+  for (i in seq_len(length(gene_pval))) {
     gene.name = names(gene_pval)[i]
-    if(i%%100==1) {message("\n", "Read in GWAS summary statistics for gene ", i, ": ", gene.name)}
+    if(i%%200==1) {message("Read in GWAS summary statistics for gene ", i, ": ", gene.name)}
     gene_pval[[gene.name]] = vector("list", 5)
     names(gene_pval[[gene.name]]) = c("snps", "betahat", "sehat", "zhat", "gwasP")
     idx = match(snp_to_gene[[i]], gwas$rsid)
@@ -457,7 +465,7 @@ read_in <- function(gwas, snp_to_gene) {
 #' with an added pseudo-count.
 #'
 #' @usage
-#'  process_scRNA(SeuratObject, meta_ct_col = "cell.type")
+#'  process_scRNA(SeuratObject, meta_ct_col)
 #' @param SeuratObject a Seurat object from a gene expression matrix, returned from \code{CreateSeuratObject}.
 #' @param meta_ct_col column name of cell types in the meta data matrix.
 #'
@@ -473,9 +481,10 @@ read_in <- function(gwas, snp_to_gene) {
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
-#' @import Seurat biomaRt
+#' @import Seurat biomaRt utils
+#' @importFrom  BiocGenerics t
 #' @export
-process_scRNA <- function(SeuratObject = SeuratObject, meta_ct_col) {
+process_scRNA <- function(SeuratObject, meta_ct_col) {
   gene.loc = read.table(file = system.file("extdata", "gene.noMHC.loc", package = "EPIC"), sep = "\t",
                         header = FALSE, stringsAsFactors = FALSE)
 
@@ -543,7 +552,8 @@ process_scRNA <- function(SeuratObject = SeuratObject, meta_ct_col) {
 #'  correlations for pairs of genes within a certain distance from each.
 #'
 #' @usage
-#'  calculate_POET_sw(genotype, gene_pval, gene.loc, chr, type = "POET", inter_dir)
+#'  calculate_POET_sw(genotype, gene_pval, gene.loc, chr, type, inter_dir,
+#'                    X_super = NULL, sliding_size = 10, Cmin = 1.5, sliding_step = 1)
 #'
 #' @param genotype a genotype matrix
 #' @param gene_pval a list of GWAS summary statistics for genes
@@ -566,13 +576,13 @@ process_scRNA <- function(SeuratObject = SeuratObject, meta_ct_col) {
 #' @examples
 #' \dontrun{
 #' inter_dir <- file.path("/path/to/intermediates", trait)
-#' calculate_POET_sw(genotype = X_ref, gene_pval = prunein_gene_pval,
+#' calculate_POET_sw(genotype = X_ref.Demo, gene_pval = prunein_gene_pval.Demo,
 #'                   gene.loc = gtex.loc,
 #'                   chr = chr, type = "POET", inter_dir = inter_dir)
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
-#' @import stats
+#' @import stats utils
 #' @export
 calculate_POET_sw <- function(genotype, gene_pval, gene.loc, chr, type, inter_dir, X_super = NULL, sliding_size = 10, Cmin = 1.5, sliding_step = 1) {
   if(!type %in% c("POET", "iPOET")){
@@ -656,7 +666,7 @@ POET <- function(Y, K, C, thres = 'soft', matrix = 'vad') {
     W <- as.matrix(W)
     Id <- sort(diag(Dd),index.return=TRUE)$ix
     Id <- as.matrix(Id)
-    F <- sqrt(n)*V[,1:K]
+    F <- sqrt(n)*V[,seq_len(K)]
     LamPCA <- Y%*%F/n
     uhat <- Y-LamPCA%*%t(F)
     Lowrank <- LamPCA%*%t(LamPCA)
@@ -679,8 +689,8 @@ POET <- function(Y, K, C, thres = 'soft', matrix = 'vad') {
   uu <- array(0,dim=c(p,p,n))
   roottheta <- array(0,dim=c(p,p))
   lambda <- array(0,dim=c(p,p))
-  for (i in 1:p){
-    for (j in 1:i){
+  for (i in seq_len(p)){
+    for (j in seq_len(i)){
       uu[i,j,] <- uhat[i,]*uhat[j,]
       roottheta[i,j] <- sd(uu[i,j,])
       lambda[i,j] <- roottheta[i,j]*rate*C
@@ -691,8 +701,8 @@ POET <- function(Y, K, C, thres = 'soft', matrix = 'vad') {
   Rthresh=matrix(0,p,p)
 
   if(thres == 'soft'){
-    for (i in 1:p){
-      for (j in 1:i){
+    for (i in seq_len(p)){
+      for (j in seq_len(i)){
         if (abs(R[i,j])<lambda[i,j] && j<i){
           Rthresh[i,j] <- 0
         }else{
@@ -723,6 +733,9 @@ POET <- function(Y, K, C, thres = 'soft', matrix = 'vad') {
 
 
 
+if (getRversion() >= "2.15.1") {
+  utils::globalVariables(c("corr.POET"))
+}
 
 #' @title Chi-square gene-level association testing and gene-gene correlation
 #'
@@ -730,7 +743,8 @@ POET <- function(Y, K, C, thres = 'soft', matrix = 'vad') {
 #'  gene-gene correlations.
 #'
 #' @usage
-#'  get_gene_chisq(gene_pval, gene.loc, type = "POET", inter_dir)
+#'  get_gene_chisq(gene_pval, gene.loc, type = "POET", inter_dir,
+#'                 max.dist = 5, sliding_size = 10, sliding_step = 1)
 #'
 #' @param gene_pval a list of GWAS summary statistics for genes
 #' @param gene.loc a data frame of gene dictionary, only including genes of interest in each transcriptomic profile
@@ -748,12 +762,15 @@ POET <- function(Y, K, C, thres = 'soft', matrix = 'vad') {
 #'
 #' @examples
 #' \dontrun{
-#' get_gene_chisq(gene_pval = prunein_gene_pval, gene.loc = gtex.loc,
-#'                type = "POET", inter_dir = inter_dir)
+#' pruneinObject.Demo <- get_gene_chisq(gene_pval = prunein_gene_pval.Demo,
+#'                                      gene.loc = gtex.loc,
+#'                                      type = "POET", inter_dir = inter_dir)
+#' prunein_POET_gene_pval.Demo <- pruneinObject.Demo$gene_POET_pval
+#' prunein_gene_corr.mat.Demo <- pruneinObject.Demo$gene_corr.mat
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
-#' @import stats
+#' @import stats utils
 #' @export
 get_gene_chisq <- function(gene_pval, gene.loc, type = "POET", inter_dir, max.dist = 5, sliding_size = 10, sliding_step = 1) {
   if(!type %in% c("POET", "iPOET")){
@@ -773,7 +790,7 @@ get_gene_chisq <- function(gene_pval, gene.loc, type = "POET", inter_dir, max.di
   gene_POET_pval <- vector('list', length = length(gene_pval))
   names(gene_POET_pval) <- names(gene_pval)
 
-  for(chr in 1:22){
+  for(chr in seq_len(22)){
     nsnps <- sum(gene.loc$V2==chr)
     genes.list <- gene.loc$V1[which(gene.loc$V2==chr)]
     gene.loc.temp <- gene.loc[which(gene.loc$V2==chr), ]
@@ -814,7 +831,7 @@ get_gene_chisq <- function(gene_pval, gene.loc, type = "POET", inter_dir, max.di
       st <- gene.loc$V3[as.character(gene.loc$V1)==gene1]
       ed <- gene.loc$V4[as.character(gene.loc$V1)==gene1]
 
-      temp <- gene.loc.temp[-c(1:i), , drop = FALSE]
+      temp <- gene.loc.temp[-seq_len(i), , drop = FALSE]
       close.gene <- as.character(temp$V1[temp$V2 == chr & temp$V3 < ed + max.dist.bp & temp$V4 > st - max.dist.bp]) # 5MB
       close.gene <- close.gene[close.gene %in% sw.gene]
       close.gene <- close.gene[close.gene %in% names(gene_POET_pval)]
@@ -825,7 +842,7 @@ get_gene_chisq <- function(gene_pval, gene.loc, type = "POET", inter_dir, max.di
 
         if(length(close.gene)>0){
           for(gene2 in close.gene){
-            if(is.null(combine_gene_pval[[gene2]]$rare_snps)){
+            if(is.null(gene_pval[[gene2]]$rare_snps)){
               gene2.snps <- gene_pval[[gene2]][["snps"]]
             } else{
               gene2.snps <- c(gene_pval[[gene2]][["snps"]], gene2)
@@ -835,13 +852,13 @@ get_gene_chisq <- function(gene_pval, gene.loc, type = "POET", inter_dir, max.di
 
             p <- length(gene1.snps)
             q <- length(gene2.snps)
-            gene1.invR.sqrt = compute_ld_inverse_sqrt(R[1:p, 1:p, drop = FALSE], tol = 1e-5)
+            gene1.invR.sqrt = compute_ld_inverse_sqrt(R[seq_len(p), seq_len(p), drop = FALSE], tol = 1e-5)
             gene2.invR.sqrt = compute_ld_inverse_sqrt(R[(p+1):(p+q), (p+1):(p+q), drop = FALSE], tol = 1e-5)
 
-            three.parts = gene1.invR.sqrt %*% R[1:p, (p+1):(p+q)] %*% gene2.invR.sqrt
+            three.parts = gene1.invR.sqrt %*% R[seq_len(p), (p+1):(p+q)] %*% gene2.invR.sqrt
             R.star <- diag(p+q)
-            R.star[1:p, (p+1):ncol(R.star)] <- three.parts
-            R.star[(p+1):ncol(R.star), 1:p] <- t(three.parts)
+            R.star[seq_len(p), (p+1):ncol(R.star)] <- three.parts
+            R.star[(p+1):ncol(R.star), seq_len(p)] <- t(three.parts)
 
             R.star.chol <- cholesky_decomposition(R.star)
             cov.chisq <- compute_covariance_cholesky(Lmat = R.star.chol, p = p, q = q)
@@ -892,7 +909,7 @@ get_gene_chisq <- function(gene_pval, gene.loc, type = "POET", inter_dir, max.di
       st <- gene.loc$V3[as.character(gene.loc$V1)==gene1]
       ed <- gene.loc$V4[as.character(gene.loc$V1)==gene1]
 
-      temp <- gene.loc.temp[-c(1:i), , drop = FALSE]
+      temp <- gene.loc.temp[-seq_len(i), , drop = FALSE]
       close.gene <- as.character(temp$V1[temp$V2 == chr & temp$V3 < ed + max.dist.bp & temp$V4 > st - max.dist.bp]) # 5MB
       close.gene <- close.gene[close.gene %in% sw.gene]
       close.gene <- close.gene[close.gene %in% names(gene_POET_pval)]
@@ -912,13 +929,13 @@ get_gene_chisq <- function(gene_pval, gene.loc, type = "POET", inter_dir, max.di
 
             p <- length(gene1.snps)
             q <- length(gene2.snps)
-            gene1.invR.sqrt = compute_ld_inverse_sqrt(R[1:p, 1:p, drop = FALSE], tol = 1e-5)
+            gene1.invR.sqrt = compute_ld_inverse_sqrt(R[seq_len(p), seq_len(p), drop = FALSE], tol = 1e-5)
             gene2.invR.sqrt = compute_ld_inverse_sqrt(R[(p+1):(p+q), (p+1):(p+q), drop = FALSE], tol = 1e-5)
 
-            three.parts = gene1.invR.sqrt %*% R[1:p, (p+1):(p+q)] %*% gene2.invR.sqrt
+            three.parts = gene1.invR.sqrt %*% R[seq_len(p), (p+1):(p+q)] %*% gene2.invR.sqrt
             R.star <- diag(p+q)
-            R.star[1:p, (p+1):ncol(R.star)] <- three.parts
-            R.star[(p+1):ncol(R.star), 1:p] <- t(three.parts)
+            R.star[seq_len(p), (p+1):ncol(R.star)] <- three.parts
+            R.star[(p+1):ncol(R.star), seq_len(p)] <- t(three.parts)
 
             R.star.chol <- cholesky_decomposition(R.star)
             cov.chisq <- compute_covariance_cholesky(Lmat = R.star.chol, p = p, q = q)
@@ -938,7 +955,7 @@ get_gene_chisq <- function(gene_pval, gene.loc, type = "POET", inter_dir, max.di
   gene_corr.mat = diag(length(gene_corr))
   rownames(gene_corr.mat) <- names(gene_pval)
   colnames(gene_corr.mat) <- names(gene_pval)
-  for (i in 1:length(gene_corr)) {
+  for (i in seq_len(length(gene_corr))) {
     if(i%%1000==1){
       message(i, "\t")
     }
@@ -1005,7 +1022,7 @@ compute_covariance_cholesky <- function(Lmat, p, q){
   if(nrow(Lmat)!=(p+q) | ncol(Lmat)!=(p+q)){
     stop("Incorrect dimensions")
   }
-  cov.chisq = 2 * sum(Lmat[(p+1):(p+q), 1:p]^2)
+  cov.chisq = 2 * sum(Lmat[(p+1):(p+q), seq_len(p)]^2)
   return(cov.chisq)
 }
 
@@ -1025,7 +1042,7 @@ compute_covariance_cholesky <- function(Lmat, p, q){
 #'
 #' @examples
 #' \dontrun{
-#' rare_gene_pval <- get_burden(genotype = genotype, gene_pval = rare_gene_pval)
+#' rare_gene_pval.Demo <- get_burden(genotype = X_ref.Demo, gene_pval = rare_gene_pval.Demo)
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
@@ -1039,9 +1056,11 @@ get_burden <- function(genotype, gene_pval) {
   snpslength <- sapply(gene_pval, function(z){length(z$snps)})
   gene_pval <- gene_pval[which(snpslength <= 1000)]
 
-  for (i in 1:length(gene_pval)) {
+  for (i in seq_len(length(gene_pval))) {
     gene.name = names(gene_pval)[i]
-    message("Burden test for ", i, ": ", gene.name)
+    if(i%%200==1){
+      message("Burden test for ", i, ": ", gene.name)
+    }
 
     snps <- gene_pval[[gene.name]][["snps"]]
     LD = make_ld_matrix_from_genotype(genotype, snps)
@@ -1109,7 +1128,8 @@ burden_score = function(z, se, R){
 #'
 #' @examples
 #' \dontrun{
-#' combine_gene_pval <- get_combined(prunein_gene_pval, rare_gene_pval)
+#' combine_gene_pval.Demo <- get_combined(prunein_gene_pval = prunein_gene_pval.Demo,
+#'                                        rare_gene_pval = rare_gene_pval.Demo)
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
@@ -1117,7 +1137,7 @@ burden_score = function(z, se, R){
 get_combined <- function(prunein_gene_pval, rare_gene_pval) {
   combine_gene_pval <- prunein_gene_pval
 
-  for (i in 1:length(combine_gene_pval)) {
+  for (i in seq_len(length(combine_gene_pval))) {
     gene.name = names(combine_gene_pval)[i]
 
     if(!is.null(rare_gene_pval[[gene.name]]) & length(rare_gene_pval[[gene.name]]$snps) <= 1000){
@@ -1144,7 +1164,7 @@ get_combined <- function(prunein_gene_pval, rare_gene_pval) {
 #'  to construct a pseudo-SNP
 #'
 #' @usage
-#'  X_super <- construct_X_super(genotype, rare_gene_pval)
+#'  construct_X_super(genotype, rare_gene_pval)
 #'
 #' @param genotype a genotype matrix
 #' @param rare_gene_pval a list of GWAS summary statistics for rare variants
@@ -1153,7 +1173,7 @@ get_combined <- function(prunein_gene_pval, rare_gene_pval) {
 #'
 #' @examples
 #' \dontrun{
-#' X_super <- construct_X_super(genotype, rare_gene_pval = rare_gene_pval)
+#' X_super.Demo <- construct_X_super(genotype = X_ref.Demo, rare_gene_pval = rare_gene_pval.Demo)
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
@@ -1167,15 +1187,18 @@ construct_X_super <- function(genotype, rare_gene_pval) {
 
   X_super.list <- vector('list', length = length(rare_gene_pval))
   names(X_super.list) = names(rare_gene_pval)
-  for (i in 1:length(rare_gene_pval)) {
+  for (i in seq_len(length(rare_gene_pval))) {
     gene.name = names(rare_gene_pval)[i]
-    message("Construct pseudo-SNP for ", i, ": ", gene.name)
+    if(i%%200==1){
+      message("Construct pseudo-SNP for ", i, ": ", gene.name)
+    }
     X_super.list[[gene.name]] <- construct_super_snps(genotype, rare_gene_pval[[gene.name]]$snps, super.name = gene.name)
   }
   X_super <- do.call(rbind, X_super.list)
 
   return(X_super)
 }
+
 
 construct_super_snps <- function(genotype, all_snps, super.name = NULL) {
   X <- genotype[all_snps, ,drop = FALSE]
@@ -1193,7 +1216,8 @@ construct_super_snps <- function(genotype, all_snps, super.name = NULL) {
 #'  to detect tissue- or cell-type-specific enrichment for a specific trait of interest.
 #'
 #' @usage
-#'  prioritize_relevance(gene_pval, gene_corr.mat, gene_expr, gene.loc)
+#'  prioritize_relevance(gene_pval, gene_corr.mat, gene_expr, gene.loc,
+#'                       chrs = 1:22, verbose = FALSE)
 #'
 #' @param gene_pval a list of genes with gene-level association testing
 #' @param gene_corr.mat a matrix of gene-gene correlations
@@ -1202,20 +1226,23 @@ construct_super_snps <- function(genotype, all_snps, super.name = NULL) {
 #' @param gene.loc a data frame of gene dictionary, only including genes of interest in each transcriptomic profile
 #'  (e.g., top 8000 highly variable genes from scRNA-seq or genes with great specificity score from GTEx v8).
 #'  This can be returned from \code{process_scRNA}.
+#' @param chrs chromosomes. Default is \code{1:22}.
+#' @param verbose a logical value of diagnostic messages. Default is \code{FALSE}.
 #'
 #' @return EPIC enrichment results
 #'
 #' @examples
 #' \dontrun{
-#' gtex.enrichment <- prioritize_relevance(gene_pval = prunein_POET_gene_pval,
-#'                                         gene_corr.mat = prunein_gene_corr.mat,
-#'                                         gene_expr = gtex, gene.loc = gtex.loc)
+#' gtex.enrichment.joint.Demo <- prioritize_relevance(gene_pval = combine_POET_gene_pval.Demo,
+#'                                                    gene_corr.mat = combine_gene_corr.mat.Demo,
+#'                                                    gene_expr = gtex.Demo, gene.loc = gtex.loc)
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
 #' @import stats
+#' @importFrom Matrix bdiag
 #' @export
-prioritize_relevance <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc) {
+prioritize_relevance <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, chrs = 1:22, verbose = FALSE) {
   if(!all(names(gene_pval)==colnames(gene_corr.mat))){
     stop("Invalid dimension of gene-gene correlation!")
   }
@@ -1233,23 +1260,26 @@ prioritize_relevance <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc) 
   # remove the "Average" column
   tissues = colnames(gene_expr.keep)[-which(colnames(gene_expr.keep)=="Average")]
 
-  # Construct a block-diagonal matrix
-  corr.list <- vector('list', 22)
-  chol.inv.list <- vector('list', 22)
-  y.list <- vector('list', 22)
-  y.reg.list <- vector('list', 22)
+  chrs <- sort(unique(chrs))
 
-  for (chr in 1:22) {
+  # Construct a block-diagonal matrix
+  corr.list <- vector('list', length = length(chrs))
+  chol.inv.list <- vector('list', length = length(chrs))
+  y.list <- vector('list', length = length(chrs))
+  y.reg.list <- vector('list', length = length(chrs))
+
+  for (chr in chrs) {
+    chr.idx <- which(chrs == chr)
     chr.genes <- gene.loc$V1[gene.loc$V2 == chr]
     block.idx <- match(chr.genes, gene.keep)[which(!is.na(match(chr.genes, gene.keep)))]
-    corr.list[[chr]] <- gene_corr.mat[block.idx, block.idx]
+    corr.list[[chr.idx]] <- gene_corr.mat[block.idx, block.idx]
 
-    y.list[[chr]] <- y[block.idx]
-    chol.inv.list[[chr]] = compute_ld_inverse_sqrt(corr.list[[chr]], tol = 1e-3)
-    y.reg.list[[chr]] <- chol.inv.list[[chr]] %*% y.list[[chr]]
+    y.list[[chr.idx]] <- y[block.idx]
+    chol.inv.list[[chr.idx]] = compute_ld_inverse_sqrt(corr.list[[chr.idx]], tol = 1e-3)
+    y.reg.list[[chr.idx]] <- chol.inv.list[[chr.idx]] %*% y.list[[chr.idx]]
   }
-  y.reg <- unlist(y.reg.list[1:22])
-  gene_expr.keep.reg <- bdiag(chol.inv.list[1:22]) %*% as.matrix(gene_expr.keep)
+  y.reg <- unlist(y.reg.list[seq_len(length(chrs))])
+  gene_expr.keep.reg <- bdiag(chol.inv.list[seq_len(length(chrs))]) %*% as.matrix(gene_expr.keep)
   gene_expr.keep.reg <- as.matrix(gene_expr.keep.reg)
 
   enrichment_results <- rep(NA, length(tissues))
@@ -1262,7 +1292,7 @@ prioritize_relevance <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc) 
     x1.qc <- gene_expr.keep.reg[,i]
     x2.qc <- gene_expr.keep.reg[,"Average"]
     df.qc <- df
-    message("Prioritizing trait-relevant tissue(s) and cell type(s) for ", i)
+    message("Prioritizing trait-relevant tissue(s) or cell type(s) for ", i)
 
     while(j <= 5){
       lm0 = lm(y.qc ~ x1.qc + x2.qc, weights = df.qc/2)
@@ -1277,7 +1307,9 @@ prioritize_relevance <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc) 
       remove.idx <- (names(cooksd) %in% ig5)
       keep.idx <- !(names(cooksd) %in% ig5)
 
-      message("\t Remove ", names(cooksd)[remove.idx])
+      if(verbose){
+        message("\t Remove ", names(cooksd)[remove.idx])
+      }
       lm <- lm(y.qc[keep.idx] ~ x1.qc[keep.idx] + x2.qc[keep.idx], weights = df.qc[keep.idx]/2)
       enrichment_results[i] <- exp(pt(summary(lm)$coefficients[2,3], df = summary(lm)$df[2], lower.tail = FALSE, log.p = TRUE))
       j = j + 1
@@ -1308,7 +1340,8 @@ prioritize_relevance <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc) 
 #'  we further carry out a statistical influence test to identify a set of
 #'  tissue- or cell-type-specific influential genes, using the DFBETAS statistics.
 #' @usage
-#'  influential_testing(gene_pval, gene_corr.mat, gene_expr, gene.loc, ct)
+#'  influential_testing(gene_pval, gene_corr.mat, gene_expr, gene.loc,
+#'                      chrs = 1:22, ct, verbose = FALSE)
 #'
 #' @param gene_pval a list of genes with gene-level association testing
 #' @param gene_corr.mat a matrix of gene-gene correlations
@@ -1317,7 +1350,9 @@ prioritize_relevance <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc) 
 #' @param gene.loc a data frame of gene dictionary, only including genes of interest in each transcriptomic profile
 #'  (e.g., top 8000 highly variable genes from scRNA-seq or genes with great specificity score from GTEx v8).
 #'  This can be returned from \code{process_scRNA}.
+#' @param chrs chromosomes. Default is \code{1:22}.
 #' @param ct a character of prioritized tissue or cell type
+#' @param verbose a logical value of diagnostic messages. Default is \code{FALSE}.
 #'
 #' @return A list with components
 #'  \item{influential.genes}{A list of tissue- or cell-type-specific influential genes}
@@ -1325,16 +1360,19 @@ prioritize_relevance <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc) 
 #'
 #' @examples
 #' \dontrun{
-#' influential_test.gtex <- influential_testing(gene_pval = prunein_POET_gene_pval,
-#'                                              gene_corr.mat = prunein_gene_corr.mat,
-#'                                              gene_expr = gtex, gene.loc = gtex.loc,
-#'                                              ct = "Liver")
+#' influential_test.Demo.liver <- influential_testing(gene_pval = combine_POET_gene_pval.Demo,
+#'                                                    gene_corr.mat = combine_gene_corr.mat.Demo,
+#'                                                    gene_expr = gtex.Demo, gene.loc = gtex.loc,
+#'                                                    ct = "Liver")
+#' influential.genes.liver = influential_test.Demo.liver$influential.genes
+#' p.dfbeta.liver = influential_test.Demo.liver$p.dfbeta
 #' }
 #'
 #' @author Rujin Wang \email{rujin@email.unc.edu}
 #' @import stats olsrr ggplot2
+#' @importFrom Matrix bdiag
 #' @export
-influential_testing <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, ct) {
+influential_testing <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, chrs = 1:22, ct, verbose = FALSE) {
   if(!all(names(gene_pval)==colnames(gene_corr.mat))){
     stop("Invalid dimension of gene-gene correlation!")
   }
@@ -1352,24 +1390,28 @@ influential_testing <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, c
   # remove the "Average" column
   tissues = colnames(gene_expr.keep)[-which(colnames(gene_expr.keep)=="Average")]
 
-  # Construct a block-diagonal matrix
-  corr.list <- vector('list', 22)
-  chol.inv.list <- vector('list', 22)
-  y.list <- vector('list', 22)
-  y.reg.list <- vector('list', 22)
+  chrs <- sort(unique(chrs))
 
-  for (chr in 1:22) {
+  # Construct a block-diagonal matrix
+  corr.list <- vector('list', length = length(chrs))
+  chol.inv.list <- vector('list', length = length(chrs))
+  y.list <- vector('list', length = length(chrs))
+  y.reg.list <- vector('list', length = length(chrs))
+
+  for (chr in chrs) {
+    chr.idx <- which(chrs == chr)
     chr.genes <- gene.loc$V1[gene.loc$V2 == chr]
     block.idx <- match(chr.genes, gene.keep)[which(!is.na(match(chr.genes, gene.keep)))]
-    corr.list[[chr]] <- gene_corr.mat[block.idx, block.idx]
+    corr.list[[chr.idx]] <- gene_corr.mat[block.idx, block.idx]
 
-    y.list[[chr]] <- y[block.idx]
-    chol.inv.list[[chr]] = compute_ld_inverse_sqrt(corr.list[[chr]], tol = 1e-3)
-    y.reg.list[[chr]] <- chol.inv.list[[chr]] %*% y.list[[chr]]
+    y.list[[chr.idx]] <- y[block.idx]
+    chol.inv.list[[chr.idx]] = compute_ld_inverse_sqrt(corr.list[[chr.idx]], tol = 1e-3)
+    y.reg.list[[chr.idx]] <- chol.inv.list[[chr.idx]] %*% y.list[[chr.idx]]
   }
-  y.reg <- unlist(y.reg.list[1:22])
-  gene_expr.keep.reg <- bdiag(chol.inv.list[1:22]) %*% as.matrix(gene_expr.keep)
+  y.reg <- unlist(y.reg.list[seq_len(length(chrs))])
+  gene_expr.keep.reg <- bdiag(chol.inv.list[seq_len(length(chrs))]) %*% as.matrix(gene_expr.keep)
   gene_expr.keep.reg <- as.matrix(gene_expr.keep.reg)
+
 
   j = 1
   genes <- names(gene_pval)
@@ -1377,7 +1419,7 @@ influential_testing <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, c
   x1.qc <- gene_expr.keep.reg[,ct]
   x2.qc <- gene_expr.keep.reg[,"Average"]
   df.qc <- df
-  message("Prioritizing trait-relevant tissue(s) and cell type(s) for ", ct)
+  message("Prioritizing trait-relevant tissue(s) or cell type(s) for ", ct)
 
   while(j <= 5){
     lm0 = lm(y.qc ~ x1.qc + x2.qc, weights = df.qc/2)
@@ -1392,7 +1434,9 @@ influential_testing <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, c
     remove.idx <- (names(cooksd) %in% ig5)
     keep.idx <- !(names(cooksd) %in% ig5)
 
-    message("\t Remove ", names(cooksd)[remove.idx])
+    if(verbose){
+      message("\t Remove ", names(cooksd)[remove.idx])
+    }
     lm <- lm(y.qc[keep.idx] ~ x1.qc[keep.idx] + x2.qc[keep.idx], weights = df.qc[keep.idx]/2)
     j = j + 1
 
@@ -1429,15 +1473,62 @@ influential_testing <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, c
     geom_point() + xlab("Genes") + ylab("DFBETAS") +
     ggtitle(paste("DFBETA for", ct)) +
     theme_bw() +
-    theme(axis.text.x=element_blank(), text = element_text(size = 18)) +
-    geom_text(hjust = -0.2, nudge_x = 0.15, size = 5,
+    theme(axis.text.x=element_blank(), text = element_text(size = 15)) +
+    geom_text(hjust = -0.2, nudge_x = 0.15, size = 4,
               family = "serif", fontface = "italic",
               na.rm = TRUE) +
-    annotate("text", x = Inf, y = Inf, hjust = 1.5, vjust = 2, size = 10,
+    annotate("text", x = Inf, y = Inf, hjust = 1.5, vjust = 2, size = 6,
              family = "serif", fontface = "italic", colour = "darkred",
              label = paste("Threshold:", round(threshold, 2)))
   influential.genes = d$txt[d$txt!=""]
 
   return(list(influential.genes = influential.genes, p.dfbeta = p.dfbeta))
 }
+
+
+
+
+if (getRversion() >= "2.15.1") {
+  utils::globalVariables(c("tissues", "pval"))
+}
+
+#' @title Plot tissue or cell type enrichment results
+#'
+#' @description Show barplots of inferred enrichment results for tissues or cell types
+#'
+#' @usage
+#'  plot_relevance(enrichment_results)
+#'
+#' @param enrichment_results EPIC enrichment results, returned by \code{prioritize_relevance()}
+#'
+#' @return A ggplot object for enrichment visualization
+#'
+#' @examples
+#' \dontrun{
+#' enrichment_plot.Demo <- plot_relevance(gtex.enrichment.joint.Demo)
+#' }
+#'
+#' @author Rujin Wang \email{rujin@email.unc.edu}
+#' @import ggplot2
+#' @export
+plot_relevance <- function(enrichment_results) {
+  o1 <- order(enrichment_results)
+  enrichment_results = data.frame(tissues = names(enrichment_results), pval = unname(enrichment_results))
+
+  p1 = ggplot(enrichment_results, aes(x = factor(tissues, levels = tissues[o1]), y = -log10(pval))) +
+    geom_bar(stat="identity", position = position_dodge(), fill = "#92C5DE") +
+    theme_bw() + xlab('') + ylab('-log10(p value)') +
+    theme(text = element_text(size = 18),
+          axis.text.x = element_text(angle = 55, hjust = 1, size = 10)) +
+    geom_hline(yintercept = -log10(0.05/nrow(enrichment_results)), linetype = 2)
+
+  return(p1)
+}
+
+
+
+
+
+
+
 

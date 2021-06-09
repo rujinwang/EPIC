@@ -4,7 +4,7 @@
 \alias{construct_X_super}
 \title{Pseudo-SNP construction}
 \usage{
-X_super <- construct_X_super(genotype, rare_gene_pval)
+construct_X_super(genotype, rare_gene_pval)
 }
 \arguments{
 \item{genotype}{a genotype matrix}
@@ -20,7 +20,7 @@ We collapse genotypes of all rare variants within a gene
 }
 \examples{
 \dontrun{
-X_super <- construct_X_super(genotype, rare_gene_pval = rare_gene_pval)
+X_super.Demo <- construct_X_super(genotype = X_ref.Demo, rare_gene_pval = rare_gene_pval.Demo)
 }
 
 }

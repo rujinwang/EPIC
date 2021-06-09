@@ -4,7 +4,8 @@
 \alias{prioritize_relevance}
 \title{Prioritizing trait-relevant tissue(s) and cell type(s)}
 \usage{
-prioritize_relevance(gene_pval, gene_corr.mat, gene_expr, gene.loc)
+prioritize_relevance(gene_pval, gene_corr.mat, gene_expr, gene.loc,
+                      chrs = 1:22, verbose = FALSE)
 }
 \arguments{
 \item{gene_pval}{a list of genes with gene-level association testing}
@@ -17,6 +18,10 @@ this can be returned from \code{process_scRNA}.}
 \item{gene.loc}{a data frame of gene dictionary, only including genes of interest in each transcriptomic profile
 (e.g., top 8000 highly variable genes from scRNA-seq or genes with great specificity score from GTEx v8).
 This can be returned from \code{process_scRNA}.}
+
+\item{chrs}{chromosomes. Default is \code{1:22}.}
+
+\item{verbose}{a logical value of diagnostic messages. Default is \code{FALSE}.}
 }
 \value{
 EPIC enrichment results
@@ -27,9 +32,9 @@ We devise a regression framework based on generalized least squares to identify 
 }
 \examples{
 \dontrun{
-gtex.enrichment <- prioritize_relevance(gene_pval = prunein_POET_gene_pval,
-                                        gene_corr.mat = prunein_gene_corr.mat,
-                                        gene_expr = gtex, gene.loc = gtex.loc)
+gtex.enrichment.joint.Demo <- prioritize_relevance(gene_pval = combine_POET_gene_pval.Demo,
+                                                   gene_corr.mat = combine_gene_corr.mat.Demo,
+                                                   gene_expr = gtex.Demo, gene.loc = gtex.loc)
 }
 
 }
