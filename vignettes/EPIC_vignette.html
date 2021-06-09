@@ -11,7 +11,7 @@
 
 <meta name="author" content="Rujin Wang, Danyu Lin, Yuchao Jiang" />
 
-<meta name="date" content="2021-06-07" />
+<meta name="date" content="2021-06-08" />
 
 <title>EPIC: Inferring relevant tissues and cell types for complex traits in GWAS</title>
 
@@ -239,7 +239,7 @@ summary {
 
 <h1 class="title toc-ignore">EPIC: Inferring relevant tissues and cell types for complex traits in GWAS</h1>
 <h4 class="author">Rujin Wang, Danyu Lin, Yuchao Jiang</h4>
-<h4 class="date">2021-06-07</h4>
+<h4 class="date">2021-06-08</h4>
 
 </div>
 
@@ -307,9 +307,7 @@ summary {
 <li>MAC: minor allele count, defined as the number of subjects with at least one observed mutation. MAC=2 * N * MAF.</li>
 </ul>
 <p>We download LDL GWAS summmary statistics from <a href="http://csg.sph.umich.edu/willer/public/lipids2013/">GLGC</a> <span class="citation">(Willer et al. 2013)</span> and use it for demonstration in this vignette.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># install.packages(&quot;C:/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC_0.0.1.tar.gz&quot;, repos = NULL, type=&quot;source&quot;)</span>
-<span class="kw">library</span>(EPIC)
-<span class="co"># source(&quot;/Users/rujin/Dropbox/writing/EPIC_pkg/EPIC/R/hello.R&quot;)</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(EPIC)
 trait =<span class="st"> &quot;LDL&quot;</span></code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(gwas)</code></pre></div>
 <pre><code>##   chr       pos      rsid A1 A2   beta     se       P    MAF     N
