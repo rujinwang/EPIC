@@ -308,7 +308,7 @@ gtex.enrichment.Demo <- prioritize_relevance(gene_pval = prunein_POET_gene_pval.
 ```
 
 EPIC allows for joint enrichment analysis of both common and rare variants. We processed and pre-stored objects `combine_POET_gene_pval.Demo` and `combine_gene_corr.mat.Demo` for demonstration. 
-```{r}
+```{r, message=FALSE}
 chr = 2 # for illustration only
 # By Default, chr = 1:22
 

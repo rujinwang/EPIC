@@ -559,53 +559,9 @@ gtex.enrichment.Demo &lt;-<span class="st"> </span><span class="kw">prioritize_r
 
 <span class="co"># To prioritize trait-relevant tissues by GTEx v8:</span>
 gtex.enrichment.joint.Demo &lt;-<span class="st"> </span><span class="kw">prioritize_relevance</span>(<span class="dt">gene_pval =</span> combine_POET_gene_pval.Demo, <span class="dt">gene_corr.mat =</span> combine_gene_corr.mat.Demo, 
-                                                   <span class="dt">gene_expr =</span> gtex.Demo, <span class="dt">gene.loc =</span> gtex.loc, <span class="dt">chrs =</span> chr) </code></pre></div>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Adipose_Subcutaneous</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Adipose_Visceral</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Adrenal_Gland</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Artery_Aorta</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Artery_Coronary</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Artery_Tibial</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Amygdala</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Anterior</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Caudate</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Cerebellar_Hemisphere</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Cerebellum</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Cortex</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Frontal_Cortex</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Hippocampus</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Hypothalamus</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Nucleus_accumbens</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Putamen</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Spinal_cord</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Brain_Substantia_nigra</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Breast</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Colon_Sigmoid</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Colon_Transverse</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Esophagus_Gastroesophageal</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Esophagus_Mucosa</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Esophagus_Muscularis</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Heart_Atrial_Appendage</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Heart_Left_Ventricle</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Liver</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Lung</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Minor_Salivary_Gland</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Muscle_Skeletal</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Nerve_Tibial</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Ovary</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Pancreas</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Pituitary</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Prostate</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Skin_Not_Sun_Exposed</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Skin_Sun_Exposed</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Small_Intestine</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Spleen</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Stomach</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Thyroid</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Uterus</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Vagina</code></pre>
-<pre><code>## Prioritizing trait-relevant tissue(s) or cell type(s) for Whole_Blood</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># To prioritize trait-relevant cell types by scRNA: specify gene_expr = scRNA.rpkm, gene.loc = scRNA.loc </span></code></pre></div>
+                                                   <span class="dt">gene_expr =</span> gtex.Demo, <span class="dt">gene.loc =</span> gtex.loc, <span class="dt">chrs =</span> chr) 
+
+<span class="co"># To prioritize trait-relevant cell types by scRNA: specify gene_expr = scRNA.rpkm, gene.loc = scRNA.loc </span></code></pre></div>
 <p>For visualization,</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">enrichment_plot.Demo &lt;-<span class="st"> </span><span class="kw">plot_relevance</span>(gtex.enrichment.joint.Demo)
 enrichment_plot.Demo</code></pre></div>
