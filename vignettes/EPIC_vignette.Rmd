@@ -319,7 +319,7 @@ gtex.enrichment.joint.Demo <- prioritize_relevance(gene_pval = combine_POET_gene
 # To prioritize trait-relevant cell types by scRNA: specify gene_expr = scRNA.rpkm, gene.loc = scRNA.loc 
 ```
 
-For visualization, 
+For visualization, EPIC offers barplots of inferred enrichment results for tissues or cell types. 
 ```{r}
 enrichment_plot.Demo <- plot_relevance(gtex.enrichment.joint.Demo)
 enrichment_plot.Demo
