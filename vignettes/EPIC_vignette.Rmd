@@ -63,7 +63,7 @@ Extra information such as z-score and MAC can be further appended.
 * Zscore: $z=\frac{\beta}{se}$
 * MAC: minor allele count, defined as the number of subjects with at least one observed mutation. MAC=2 * N * MAF. 
 
-We download LDL GWAS summmary statistics from [GLGC](http://csg.sph.umich.edu/willer/public/lipids2013/) [@Willer2013]. 
+We download LDL GWAS summmary statistics from [GLGC](http://csg.sph.umich.edu/willer/public/lipids2013/) [@Willer2013] for illustration. 
 
 ```{r}
 library(EPIC)
