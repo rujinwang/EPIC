@@ -14,7 +14,7 @@ Rujin Wang <rujin@email.unc.edu>
 From GitHub
 ```
 install.packages('devtools')
-devtools::install_github("rujinwang/EPIC")
+devtools::install_github("rujinwang/EPIC/package")
 ```
 
 ## Description
