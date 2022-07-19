@@ -790,7 +790,7 @@ get_gene_chisq <- function(gene_pval, gene.loc, type = "POET", inter_dir, max.di
   gene_POET_pval <- vector('list', length = length(gene_pval))
   names(gene_POET_pval) <- names(gene_pval)
 
-  for(chr in seq_len(22)){
+  for(chr in intersect(seq_len(22), unique(gene.loc$V2))){
     nsnps <- sum(gene.loc$V2==chr)
     genes.list <- gene.loc$V1[which(gene.loc$V2==chr)]
     gene.loc.temp <- gene.loc[which(gene.loc$V2==chr), ]
@@ -1279,7 +1279,7 @@ prioritize_relevance <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, 
     y.reg.list[[chr.idx]] <- chol.inv.list[[chr.idx]] %*% y.list[[chr.idx]]
   }
   y.reg <- unlist(y.reg.list[seq_len(length(chrs))])
-  gene_expr.keep.reg <- bdiag(chol.inv.list[seq_len(length(chrs))]) %*% as.matrix(gene_expr.keep)
+  gene_expr.keep.reg <- Matrix::bdiag(chol.inv.list[seq_len(length(chrs))]) %*% as.matrix(gene_expr.keep)
   gene_expr.keep.reg <- as.matrix(gene_expr.keep.reg)
 
   enrichment_results <- rep(NA, length(tissues))
@@ -1409,7 +1409,7 @@ influential_testing <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, c
     y.reg.list[[chr.idx]] <- chol.inv.list[[chr.idx]] %*% y.list[[chr.idx]]
   }
   y.reg <- unlist(y.reg.list[seq_len(length(chrs))])
-  gene_expr.keep.reg <- bdiag(chol.inv.list[seq_len(length(chrs))]) %*% as.matrix(gene_expr.keep)
+  gene_expr.keep.reg <- Matrix::bdiag(chol.inv.list[seq_len(length(chrs))]) %*% as.matrix(gene_expr.keep)
   gene_expr.keep.reg <- as.matrix(gene_expr.keep.reg)
 
 
