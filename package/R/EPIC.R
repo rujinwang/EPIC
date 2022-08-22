@@ -534,10 +534,12 @@ process_scRNA <- function(SeuratObject, meta_ct_col) {
 
   log2_rpkm_ct.ngene = cbind(log2_rpkm_ct.ngene, apply(log2_rpkm_ct.ngene, 1, mean))
   colnames(log2_rpkm_ct.ngene)[ncol(log2_rpkm_ct.ngene)] = "Average"
+  rownames(log2_rpkm_ct.ngene) <- dictionary$ensembl_gene_id[match(rownames(log2_rpkm_ct.ngene), dictionary$hgnc_symbol)]
 
   log2_rpkm_ct.ngene = as.data.frame(log2_rpkm_ct.ngene)
 
   dictionary.ngene <- dictionary.ngene[,-1]
+  colnames(dictionary.ngene) <- c("V1","V2","V3","V4","V5")
 
   return(list(scRNA.rpkm = log2_rpkm_ct.ngene, scRNA.loc = dictionary.ngene))
 }
@@ -1246,9 +1248,17 @@ prioritize_relevance <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, 
   if(!all(names(gene_pval)==colnames(gene_corr.mat))){
     stop("Invalid dimension of gene-gene correlation!")
   }
+  gene_pval <- gene_pval[names(gene_pval) %in% gene.loc$V1]
+  gene_corr.mat <- gene_corr.mat[colnames(gene_corr.mat) %in% gene.loc$V1, colnames(gene_corr.mat) %in% gene.loc$V1]
+
   gene.loc <- gene.loc[order(gene.loc$V2, gene.loc$V3, gene.loc$V4), ]
   gene.keep = names(gene_pval)
   gene_expr.keep <- gene_expr[match(gene.keep, rownames(gene_expr)),]
+  gene_expr.keep <- gene_expr.keep[match(gene.loc$V1, rownames(gene_expr.keep))[which(!is.na(match(gene.loc$V1, rownames(gene_expr.keep))))],]
+
+  if(length(gene_pval) <= 1  | nrow(gene_corr.mat) <= 1 | nrow(gene_expr.keep) <= 1){
+    stop("Invalid input of genes")
+  }
 
   chisq <- sapply(gene_pval, function(z){z$chisq}, USE.NAMES = FALSE)
   df <- sapply(gene_pval, function(z){z$df}, USE.NAMES = FALSE)
