@@ -28,7 +28,7 @@ and adopt generalized least squares to prioritize trait-relevant tissues or cell
 structures both within and between genes.
 
 ## Manuscript
-Wang R, Lin D, Jiang Y. EPIC: inferring relevant tissues and cell types for complex traits by integrating genome-wide association studies and single-cell RNA sequencing. ***bioRxiv***, 2021. ([link](https://www.biorxiv.org/content/10.1101/2021.06.09.447805v1))
+Wang R, Lin D, Jiang Y. EPIC: inferring relevant tissues and cell types for complex traits by integrating genome-wide association studies and single-cell RNA sequencing. ***PLOS Genetics***, 2022. ([link](https://journals.plos.org/plosgenetics/article/authors?id=10.1371/journal.pgen.1010251))
 
 ## Vignettes
 [HTML](http://htmlpreview.github.io/?https://github.com/rujinwang/EPIC/blob/master/vignettes/EPIC_vignette.html)
