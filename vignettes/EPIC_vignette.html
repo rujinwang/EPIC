@@ -11,7 +11,7 @@
 
 <meta name="author" content="Rujin Wang, Danyu Lin, Yuchao Jiang" />
 
-<meta name="date" content="2022-08-21" />
+<meta name="date" content="2022-08-22" />
 
 <title>EPIC: Inferring relevant tissues and cell types for complex traits in GWAS</title>
 
@@ -461,7 +461,7 @@ pre code {
 <h1 class="title toc-ignore">EPIC: Inferring relevant tissues and cell
 types for complex traits in GWAS</h1>
 <h4 class="author">Rujin Wang, Danyu Lin, Yuchao Jiang</h4>
-<h4 class="date">2022-08-21</h4>
+<h4 class="date">2022-08-22</h4>
 
 </div>
 
@@ -664,30 +664,41 @@ multicollinearity problem, we perform LD pruning using LD threshold
 pruned-in common variants, followed by a second-round of LD pruning if
 the number of pruned-in common SNPs per gene exceeds 200. We demonstrate
 here how the first-round LD pruning pipeline works using <a href="https://www.cog-genomics.org/plink/1.9/">PLINK</a> <span class="citation">(Chang et al. 2015)</span>.</p>
+<p>Please note that we generated and pre-stored gene annotations
+<code>annotation_dictionary.txt</code> using the default setting in the
+package. To obtain the path (<code>epic_path_to_ad</code>) to
+<code>annotation_dictionary.txt</code>, please use R command
+<code>system.file(&quot;extdata&quot;, &quot;annotation_dictionary.txt&quot;, package = &quot;EPIC&quot;)</code>.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="va">plink_dir</span><span class="op">=</span>/path/to/PLINK</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="va">out_dir</span><span class="op">=</span>/path/to/plink_output</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="va">ref_dir</span><span class="op">=</span>/path/to/bfile</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$out_dir</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gene <span class="kw">in</span> <span class="kw">`</span><span class="fu">cut</span> <span class="at">-f1</span> <span class="va">$out_dir</span>/annotation_dictionary.txt<span class="kw">`;</span> <span class="cf">do</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="va">chr</span><span class="op">=</span><span class="kw">`</span><span class="fu">grep</span> <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$gene</span><span class="st">&quot;</span> <span class="va">$out_dir</span>/annotation_dictionary.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f2</span><span class="kw">`</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">from</span><span class="op">=</span><span class="kw">`</span><span class="fu">grep</span> <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$gene</span><span class="st">&quot;</span> <span class="va">$out_dir</span>/annotation_dictionary.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f3</span><span class="kw">`</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">to</span><span class="op">=</span><span class="kw">`</span><span class="fu">grep</span> <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$gene</span><span class="st">&quot;</span> <span class="va">$out_dir</span>/annotation_dictionary.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f4</span><span class="kw">`</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="va">window</span><span class="op">=</span><span class="kw">`</span><span class="fu">grep</span> <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$gene</span><span class="st">&quot;</span> <span class="va">$out_dir</span>/annotation_dictionary.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f6</span><span class="kw">`</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="va">MAF</span><span class="op">=</span>0.01</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="va">prunein_dir</span><span class="op">=</span><span class="va">$out_dir</span>/prunein/<span class="va">$MAF</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-d</span> <span class="va">$prunein_dir</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="fu">mkdir</span> <span class="at">-p</span> <span class="va">$prunein_dir</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> <span class="va">$prunein_dir</span>/<span class="va">${gene}</span>.prune.in <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">$plink_dir</span><span class="ex">/plink</span> <span class="at">--bfile</span> <span class="va">$ref_dir</span>/g1000_eur <span class="dt">\</span></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">--maf</span> <span class="va">$MAF</span> <span class="dt">\</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>            <span class="at">--from-bp</span> <span class="va">$from</span> <span class="dt">\</span></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>            <span class="at">--to-bp</span> <span class="va">$to</span> <span class="dt">\</span></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>            <span class="at">--chr</span> chr<span class="va">$chr</span> <span class="dt">\</span></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>            <span class="at">--indep-pairwise</span> <span class="va">${window}</span><span class="st">&#39;kb&#39;</span> 1 0.8 <span class="dt">\</span></span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>            <span class="at">--out</span> <span class="va">$prunein_dir</span>/<span class="va">$gene</span></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="va">$out_dir</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Specify epic_path_to_ad using the output returned from R command</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="va">epic_path_to_ad</span><span class="op">=</span>/path/to/epic/annotation_dictionary.txt</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> <span class="va">$epic_path_to_ad</span> <span class="va">$out_dir</span>/annotation_dictionary.txt</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gene <span class="kw">in</span> <span class="kw">`</span><span class="fu">cut</span> <span class="at">-f1</span> <span class="va">$out_dir</span>/annotation_dictionary.txt<span class="kw">`;</span> <span class="cf">do</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="va">chr</span><span class="op">=</span><span class="kw">`</span><span class="fu">grep</span> <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$gene</span><span class="st">&quot;</span> <span class="va">$out_dir</span>/annotation_dictionary.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f2</span><span class="kw">`</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="va">from</span><span class="op">=</span><span class="kw">`</span><span class="fu">grep</span> <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$gene</span><span class="st">&quot;</span> <span class="va">$out_dir</span>/annotation_dictionary.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f3</span><span class="kw">`</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="va">to</span><span class="op">=</span><span class="kw">`</span><span class="fu">grep</span> <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$gene</span><span class="st">&quot;</span> <span class="va">$out_dir</span>/annotation_dictionary.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f4</span><span class="kw">`</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="va">window</span><span class="op">=</span><span class="kw">`</span><span class="fu">grep</span> <span class="at">-w</span> <span class="st">&quot;</span><span class="va">$gene</span><span class="st">&quot;</span> <span class="va">$out_dir</span>/annotation_dictionary.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f6</span><span class="kw">`</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">MAF</span><span class="op">=</span>0.01</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="va">prunein_dir</span><span class="op">=</span><span class="va">$out_dir</span>/prunein/<span class="va">$MAF</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-d</span> <span class="va">$prunein_dir</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="fu">mkdir</span> <span class="at">-p</span> <span class="va">$prunein_dir</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> <span class="va">$prunein_dir</span>/<span class="va">${gene}</span>.prune.in <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>        <span class="va">$plink_dir</span><span class="ex">/plink</span> <span class="at">--bfile</span> <span class="va">$ref_dir</span>/g1000_eur <span class="dt">\</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">--maf</span> <span class="va">$MAF</span> <span class="dt">\</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>            <span class="at">--from-bp</span> <span class="va">$from</span> <span class="dt">\</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>            <span class="at">--to-bp</span> <span class="va">$to</span> <span class="dt">\</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>            <span class="at">--chr</span> chr<span class="va">$chr</span> <span class="dt">\</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>            <span class="at">--indep-pairwise</span> <span class="va">${window}</span><span class="st">&#39;kb&#39;</span> 1 0.8 <span class="dt">\</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>            <span class="at">--out</span> <span class="va">$prunein_dir</span>/<span class="va">$gene</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
 <p>Note that PLINK LD-pruning procedure would generate thousands of
 intermediate files for further data importing. Use function
 <code>LD_pruning()</code> to complete prune-in variants importing, by

@@ -113,12 +113,20 @@ rare_snp_to_gene.Demo <- snp_division_obj.Demo$rare_snp_to_gene
 ## 2.3 LD pruning for common variants
 To reduce the computational cost and to alleviate the multicollinearity problem, we perform LD pruning using LD threshold $r^2 \leq 0.8$ to obtain a set of pruned-in common variants, followed by a second-round of LD pruning if the number of pruned-in common SNPs per gene exceeds 200. We demonstrate here how the first-round LD pruning pipeline works using [PLINK](https://www.cog-genomics.org/plink/1.9/) [@PLINK].
 
+Please note that we generated and pre-stored gene annotations `annotation_dictionary.txt` using the default setting in the package. To obtain the path (`epic_path_to_ad`) to `annotation_dictionary.txt`, please use R command `system.file("extdata", "annotation_dictionary.txt", package = "EPIC")`. 
+
 ```{bash, eval=FALSE}
 #!/bin/bash
 plink_dir=/path/to/PLINK
 out_dir=/path/to/plink_output
 ref_dir=/path/to/bfile
+
 cd $out_dir
+
+# Specify epic_path_to_ad using the output returned from R command
+epic_path_to_ad=/path/to/epic/annotation_dictionary.txt
+
+cp $epic_path_to_ad $out_dir/annotation_dictionary.txt
 
 for gene in `cut -f1 $out_dir/annotation_dictionary.txt`; do
 	chr=`grep -w "$gene" $out_dir/annotation_dictionary.txt | cut -f2`
