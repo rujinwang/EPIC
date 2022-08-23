@@ -1386,9 +1386,17 @@ influential_testing <- function(gene_pval, gene_corr.mat, gene_expr, gene.loc, c
   if(!all(names(gene_pval)==colnames(gene_corr.mat))){
     stop("Invalid dimension of gene-gene correlation!")
   }
+  gene_pval <- gene_pval[names(gene_pval) %in% gene.loc$V1]
+  gene_corr.mat <- gene_corr.mat[colnames(gene_corr.mat) %in% gene.loc$V1, colnames(gene_corr.mat) %in% gene.loc$V1]
+
   gene.loc <- gene.loc[order(gene.loc$V2, gene.loc$V3, gene.loc$V4), ]
   gene.keep = names(gene_pval)
   gene_expr.keep <- gene_expr[match(gene.keep, rownames(gene_expr)),]
+  gene_expr.keep <- gene_expr.keep[match(gene.loc$V1, rownames(gene_expr.keep))[which(!is.na(match(gene.loc$V1, rownames(gene_expr.keep))))],]
+
+  if(length(gene_pval) <= 1  | nrow(gene_corr.mat) <= 1 | nrow(gene_expr.keep) <= 1){
+    stop("Invalid input of genes")
+  }
 
   chisq <- sapply(gene_pval, function(z){z$chisq}, USE.NAMES = FALSE)
   df <- sapply(gene_pval, function(z){z$df}, USE.NAMES = FALSE)
