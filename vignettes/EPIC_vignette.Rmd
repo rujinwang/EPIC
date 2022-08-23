@@ -166,6 +166,11 @@ results_dir <- file.path("/path/to/results", trait)
 bfile_path <- "/path/to/bfile"
 plink_path <- "/path/to/PLINK"
 chr = 2
+
+if(!dir.exists(results_dir)){
+  dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
 prunein_qc_snp_to_gene.chr <- second_pruning(prunein_snp_to_gene.Demo, plink_path, bfile_path, chr, prunein_dir)
 save(prunein_qc_snp_to_gene.chr, file = file.path(results_dir, paste0(trait, "_prunein_", MAF, "_chr", chr, "_QC.rda")))
 
@@ -334,7 +339,7 @@ enrichment_plot.Demo
 ```
 
 
-We further carry out a gene-specific influence analysis to identify genes that are highly influential in leading to the significance of the prioritized tissue or cell type, using the DFBETAS statistics - large values of DFBETAS indicate observations (i.e., genes) that are influential in estimating $\gamma_c$.  With a size-adjusted cutoff, significantly influential genes allow for further pathway or gene set enrichment analyses.
+We further carry out a gene-specific influence analysis to identify genes that are highly influential in leading to the significance of the prioritized tissue or cell type, using the DFBETAS statistics - large values of DFBETAS indicate observations (i.e., genes) that are influential in estimating $\gamma_c$.  With a size-adjusted cutoff, significantly influential genes allow for further pathway or gene set enrichment analyses. Specify `ct = "xxx"` to be the tissue or cell type of your interest in `gene_expr`. 
 ```{r}
 influential_test.Demo.liver <- influential_testing(gene_pval = combine_POET_gene_pval.Demo,
                                                    gene_corr.mat = combine_gene_corr.mat.Demo, 

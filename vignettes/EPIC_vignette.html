@@ -11,7 +11,7 @@
 
 <meta name="author" content="Rujin Wang, Danyu Lin, Yuchao Jiang" />
 
-<meta name="date" content="2022-08-22" />
+<meta name="date" content="2022-08-23" />
 
 <title>EPIC: Inferring relevant tissues and cell types for complex traits in GWAS</title>
 
@@ -461,7 +461,7 @@ pre code {
 <h1 class="title toc-ignore">EPIC: Inferring relevant tissues and cell
 types for complex traits in GWAS</h1>
 <h4 class="author">Rujin Wang, Danyu Lin, Yuchao Jiang</h4>
-<h4 class="date">2022-08-22</h4>
+<h4 class="date">2022-08-23</h4>
 
 </div>
 
@@ -720,15 +720,20 @@ in parallel.</p>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>bfile_path <span class="ot">&lt;-</span> <span class="st">&quot;/path/to/bfile&quot;</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>plink_path <span class="ot">&lt;-</span> <span class="st">&quot;/path/to/PLINK&quot;</span></span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>chr <span class="ot">=</span> <span class="dv">2</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>prunein_qc_snp_to_gene.chr <span class="ot">&lt;-</span> <span class="fu">second_pruning</span>(prunein_snp_to_gene.Demo, plink_path, bfile_path, chr, prunein_dir)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(prunein_qc_snp_to_gene.chr, <span class="at">file =</span> <span class="fu">file.path</span>(results_dir, <span class="fu">paste0</span>(trait, <span class="st">&quot;_prunein_&quot;</span>, MAF, <span class="st">&quot;_chr&quot;</span>, chr, <span class="st">&quot;_QC.rda&quot;</span>)))</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge: after we are done with chromosomes 1-22</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>prunein_qc_snp_to_gene <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (chr <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">22</span>) {</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">load</span>(<span class="fu">file.path</span>(results_dir, <span class="fu">paste0</span>(trait, <span class="st">&quot;_prunein_&quot;</span>, MAF, <span class="st">&quot;_chr&quot;</span>, chr, <span class="st">&quot;_QC.rda&quot;</span>)))</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  prunein_qc_snp_to_gene <span class="ot">&lt;-</span> <span class="fu">c</span>(prunein_qc_snp_to_gene, prunein_qc_snp_to_gene.chr)</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">dir.exists</span>(results_dir)){</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(results_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>prunein_qc_snp_to_gene.chr <span class="ot">&lt;-</span> <span class="fu">second_pruning</span>(prunein_snp_to_gene.Demo, plink_path, bfile_path, chr, prunein_dir)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(prunein_qc_snp_to_gene.chr, <span class="at">file =</span> <span class="fu">file.path</span>(results_dir, <span class="fu">paste0</span>(trait, <span class="st">&quot;_prunein_&quot;</span>, MAF, <span class="st">&quot;_chr&quot;</span>, chr, <span class="st">&quot;_QC.rda&quot;</span>)))</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge: after we are done with chromosomes 1-22</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>prunein_qc_snp_to_gene <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (chr <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">22</span>) {</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">load</span>(<span class="fu">file.path</span>(results_dir, <span class="fu">paste0</span>(trait, <span class="st">&quot;_prunein_&quot;</span>, MAF, <span class="st">&quot;_chr&quot;</span>, chr, <span class="st">&quot;_QC.rda&quot;</span>)))</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  prunein_qc_snp_to_gene <span class="ot">&lt;-</span> <span class="fu">c</span>(prunein_qc_snp_to_gene, prunein_qc_snp_to_gene.chr)</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div id="importing-gwas-summary-statistics" class="section level2">
 <h2>2.4 Importing GWAS summary statistics</h2>
@@ -991,7 +996,9 @@ prioritized tissue or cell type, using the DFBETAS statistics - large
 values of DFBETAS indicate observations (i.e., genes) that are
 influential in estimating <span class="math inline">\(\gamma_c\)</span>.
 With a size-adjusted cutoff, significantly influential genes allow for
-further pathway or gene set enrichment analyses.</p>
+further pathway or gene set enrichment analyses. Specify
+<code>ct = &quot;xxx&quot;</code> to be the tissue or cell type of your interest
+in <code>gene_expr</code>.</p>
 <div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>influential_test.Demo.liver <span class="ot">&lt;-</span> <span class="fu">influential_testing</span>(<span class="at">gene_pval =</span> combine_POET_gene_pval.Demo,</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">gene_corr.mat =</span> combine_gene_corr.mat.Demo, </span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                                                   <span class="at">gene_expr =</span> gtex.Demo, <span class="at">gene.loc =</span> gtex.loc, </span>
