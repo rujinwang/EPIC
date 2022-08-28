@@ -590,8 +590,14 @@ calculate_POET_sw <- function(genotype, gene_pval, gene.loc, chr, type, inter_di
   if(!type %in% c("POET", "iPOET")){
     stop("Type should be either POET or iPOET! ")
   }
+  if(length(chr) != 1){
+    stop("Invalid input of chr")
+  }
   if(Cmin <=0){
     stop("Cmin should be a positive numeric value! ")
+  }
+  if(length(which(gene.loc$V2==chr)) == 0){
+    stop(paste0("Chr = ", chr, " is not found in gene.loc! "))
   }
   gene.loc <- gene.loc[order(gene.loc$V2, gene.loc$V3, gene.loc$V4), ]
   gene.loc <- gene.loc[which(gene.loc$V2==chr), ]
