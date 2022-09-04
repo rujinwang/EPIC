@@ -341,7 +341,7 @@ LD_pruning <- function(common_snp_to_gene, prunein_dir) {
 #' bfile_path <- "/path/to/bfile"
 #' plink_path <- "/path/to/PLINK"
 #' chr = 2
-#' prunein_qc_snp_to_gene.chr <- second_pruning(prunein_snp_to_gene.Demo,
+#' prunein_qc_snp_to_gene.chr <- second_pruning(prunein_snp_to_gene.Demo, maf_thres = 0.01, 
 #'                                              plink_path, bfile_path, chr, prunein_dir)
 #' }
 #'
