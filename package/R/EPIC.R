@@ -322,8 +322,9 @@ LD_pruning <- function(common_snp_to_gene, prunein_dir) {
 #' common variants using PLINK.
 #'
 #' @usage
-#'  second_pruning(prunein_snp_to_gene, plink_path, bfile_path, chr, prunein_dir)
-#' @param prunein_snp_to_gene A list of assigned common SNPs for genes, returned from \code{LD_pruning}.
+#'  second_pruning(prunein_qc_snp_to_gene, maf_thres = 0.01, plink_path, bfile_path, chr, prunein_dir)
+#' @param prunein_qc_snp_to_gene A list of QCed common SNPs for genes, returned from \code{LD_pruning}.
+#' @param maf_thres the MAF cutoff for common and rare variants. Default is \code{0.01}.
 #' @param bfile_path path to the \code{bim} file of reference panel
 #' @param plink_path path to the PLINK toolkit
 #' @param chr numeric value of chromosome number
@@ -347,7 +348,10 @@ LD_pruning <- function(common_snp_to_gene, prunein_dir) {
 #' @author Rujin Wang \email{rujin@email.unc.edu}
 #' @import data.table glue utils
 #' @export
-second_pruning <- function(prunein_snp_to_gene, plink_path, bfile_path, chr, prunein_dir) {
+second_pruning <- function(prunein_qc_snp_to_gene, maf_thres = 0.01, plink_path, bfile_path, chr, prunein_dir) {
+  if(maf_thres > 1 | maf_thres < 0){
+    stop("Invalid MAF threshold! ")
+  }
   anno_dictionary <- read.table(file = system.file("extdata", "annotation_dictionary.txt", package = "EPIC"),
                                 sep = "\t", header = FALSE, stringsAsFactors = FALSE)
   gene.chr <- as.character(anno_dictionary$V1)[anno_dictionary$V2==chr]
