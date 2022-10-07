@@ -341,7 +341,7 @@ LD_pruning <- function(common_snp_to_gene, prunein_dir) {
 #' bfile_path <- "/path/to/bfile"
 #' plink_path <- "/path/to/PLINK"
 #' chr = 2
-#' prunein_qc_snp_to_gene.chr <- second_pruning(prunein_snp_to_gene.Demo, maf_thres = 0.01, 
+#' prunein_qc_snp_to_gene.chr <- second_pruning(prunein_snp_to_gene.Demo, maf_thres = 0.01,
 #'                                              plink_path, bfile_path, chr, prunein_dir)
 #' }
 #'
@@ -602,6 +602,9 @@ calculate_POET_sw <- function(genotype, gene_pval, gene.loc, chr, type, inter_di
   }
   if(length(which(gene.loc$V2==chr)) == 0){
     stop(paste0("Chr = ", chr, " is not found in gene.loc! "))
+  }
+  if(length(which(gene.loc$V2==chr)) < sliding_size){
+    stop(paste0("Invalid input of gene.loc for sliding window on ", "chr = ", chr, "! "))
   }
   gene.loc <- gene.loc[order(gene.loc$V2, gene.loc$V3, gene.loc$V4), ]
   gene.loc <- gene.loc[which(gene.loc$V2==chr), ]
